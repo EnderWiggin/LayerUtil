@@ -1,0 +1,12 @@
+LayerUtil is a simple resource decoder/encoder utiliy for Haven and Hearth
+
+Requirements:
+	JRE 7 or JDK 7
+
+Compile with:
+	ant clean jar
+	
+Run with:
+    java -jar LayerUtil.jar [OPTION] [ARGS]
+    
+see `java -jar LayerUtil.jar -h' for more details 
