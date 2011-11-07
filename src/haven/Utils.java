@@ -142,13 +142,14 @@ public class Utils {
 	return(ret);
     }
 
-    static byte[] byte_strd(String s){
+    static byte[] byte_strd(String s) throws Exception{
 	int i;
-	byte[] b = new byte[s.length()+1];
-	for(i=0;i<s.length();++i){
-	    b[i] = (byte)s.charAt(i);
+	byte[] utf8 = s.getBytes("UTF-8");
+	byte[] b = new byte[utf8.length+1];
+	for(i=0;i<utf8.length;++i){
+	    b[i] = utf8[i];
 	}
-	b[s.length()] = 0;// nul end
+	b[utf8.length] = 0;// nul end
 	return(b);
     }
 	
@@ -233,11 +234,11 @@ public class Utils {
     public static String rnstr(BufferedReader br) throws Exception{
 	String n = "";
 	while( (n=br.readLine()) != null ){
-	    if(n.length() > 0 && n.charAt(0) == '#')
+	    if(n.length() > 0 && (n.charAt(0) == '#' || n.startsWith("﻿")))
 		continue;
 	    break;
 	}
-	return(n);
+	return(n.replace("\\n","\n"));
     }
 
     public static int floordiv(int a, int b) {

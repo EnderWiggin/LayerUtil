@@ -61,7 +61,7 @@ public class Resource
 	{116,105,108,101,0},
 	{110,101,103,0},
 	{97,110,105,109,0},
-	{116,105,105,101,115,101,116,0},
+	{116,105,108,101,115,101,116,0},
 	{112,97,103,105,110,97,0},
 	{97,99,116,105,111,110,0},
 	{97,117,100,105,111,0},
@@ -150,6 +150,7 @@ public class Resource
 	    nooff = (buf[4] & 2) != 0;/* byte */
 	    id = Utils.int16d(buf, 5);/* 2 bytes */
 	    o = cdec(buf, 7);/* 4 bytes */
+
 	    try {
 		img = ImageIO.read(new ByteArrayInputStream(buf, 11, buf.length - 11));
 	    } catch(IOException e) {
@@ -160,7 +161,7 @@ public class Resource
 	}	
 
 	public Image(File data,File png) throws Exception{
-	    BufferedReader br = new BufferedReader(new FileReader(data));
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
 	    z = Utils.rnint(br);
 	    subz = Utils.rnint(br);
 	    nooff = (Utils.rnint(br) & 2) != 0;
@@ -189,7 +190,7 @@ public class Resource
 	    new File(res+"//image//").mkdirs();
 	    File f = new File(res+"//image//image_"+i+".data");
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new FileWriter(f,true));
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
 	    bw.write("#IMAGE LAYER FOR RES "+res+END);
 	    bw.write("#int16 z"+END);
 	    bw.write(Integer.toString(z)+END);
@@ -221,7 +222,8 @@ public class Resource
 
     public class Tooltip extends Layer {
 	public final String t;
-                
+	private int size = 0;
+
 	public Tooltip(byte[] buf) {
 	    try {
 		t = new String(buf, "UTF-8");
@@ -231,13 +233,14 @@ public class Resource
 	}
 
 	public Tooltip(File data) throws Exception{
-	    BufferedReader br = new BufferedReader(new FileReader(data));
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
 	    t = Utils.rnstr(br);
+	    size = Utils.byte_strd(t).length;
 	    br.close();
 	}
 
 	public int size() {
-	    return(t.length()+1);
+	    return(size);
 	}
 	public int type() { return TOOLTIP; }                
 	public void init() {}
@@ -246,7 +249,7 @@ public class Resource
 	    new File(res+"//tooltip//").mkdirs();
 	    System.out.println(res);
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new FileWriter(f,false));
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
 	    bw.write("#TOOLTIP LAYER FOR RES " + res+END);
 	    bw.write("#String tooltip"+END);
 	    bw.write(t.replace("\n","\\n")+END);
@@ -280,7 +283,7 @@ public class Resource
 	}
 
 	public Tile(File data,File png) throws Exception{
-	    BufferedReader br = new BufferedReader(new FileReader(data));
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
 	    t =(char) Utils.rnint(br);
 	    id = Utils.rnint(br);
 	    w = Utils.rnint(br);
@@ -304,7 +307,7 @@ public class Resource
 	    File f = new File(res+"//tile//tile_"+i+".data");
 	    new File(res+"//tile//").mkdirs();
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new FileWriter(f,false));
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
 	    bw.write("#TILE LAYER FOR RES "+res+END);
 	    bw.write("#Byte t"+END);
 	    bw.write(Integer.toString((int)t)+END);
@@ -363,7 +366,7 @@ public class Resource
 	}
 	
 	public Neg(File data) throws Exception{
-	    BufferedReader br = new BufferedReader(new FileReader(data));
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
 	    cc = new Coord(Utils.rnint(br),Utils.rnint(br)); /* 4 bytes */
 	    bc = new Coord(Utils.rnint(br),Utils.rnint(br)); /* 4 bytes */
 	    bs = new Coord(Utils.rnint(br),Utils.rnint(br)); /* 4 bytes */
@@ -398,7 +401,7 @@ public class Resource
 	    File f = new File(res+"//neg//neg_"+i+".data");
 	    new File(res+"//neg//").mkdirs();
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new FileWriter(f,false));
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
 	    bw.write("#NEG LAYER FOR RES: "+res+END);
 	    bw.write("#Coord cc"+END);
 	    bw.write(Integer.toString(cc.x)+END);
@@ -460,7 +463,7 @@ public class Resource
 	    id = Utils.int16d(buf, 0);/* 2 bytes */
 	    d = Utils.uint16d(buf, 2);/* 2 bytes */
 	    ids = new int[Utils.uint16d(buf, 4)];/* 2 bytes */
-	    if(buf.length - 6 != ids.length * 2) /* weird rule */
+	    if(buf.length - 6 != ids.length * 2) 
 		throw(new LoadException("Invalid anim descriptor in " + name, Resource.this));
 		for(int i = 0; i < ids.length; i++){
 		    ids[i] = Utils.int16d(buf, 6 + (i * 2)); /* 2 bytes */
@@ -468,7 +471,7 @@ public class Resource
 	}
 	
 	public Anim(File data) throws Exception{
-	    BufferedReader br = new BufferedReader(new FileReader(data));
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
 	    id = Utils.rnint(br);
 	    d = Utils.rnint(br);
 	    ids = new int[Utils.rnint(br)];
@@ -481,8 +484,7 @@ public class Resource
 
 	public int size() {
 	    int s = 6;
-	    for(int i = 0;i<ids.length;++i)
-		s+=2;
+	    s += (2 * ids.length);
 	    return(s);
 	}
 
@@ -491,7 +493,7 @@ public class Resource
 	    File f = new File(res+"//anim//anim_"+i+".data");
 	    new File(res+"//anim//").mkdirs();
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new FileWriter(f,false));
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
 	    bw.write("#ANIM LAYER FOR RES "+res+END);
 	    bw.write("#int16 id [keep -1]"+END);
 	    bw.write(Integer.toString(id)+END);
@@ -523,15 +525,17 @@ public class Resource
 	private int[] flw;
 	int flnum;
 	int flavprob;
+
+	private int size = 0;
 		
 	public Tileset(byte[] buf) {
 	    int[] off = new int[1];
 	    off[0] = 0;
-	    fl = Utils.ub(buf[off[0]++]); /* 1 Byte */
-	    flnum = Utils.uint16d(buf, off[0]); /* 2 Bytes */
-	    off[0] += 2;
+	    fl = Utils.ub(buf[off[0]++]); /* 1 Byte off = 0*/
+	    flnum = Utils.uint16d(buf, off[0]); /* 2 Bytes off  = 1*/
+	    off[0] += 2; /* off = 3 */
 	    flavprob = Utils.uint16d(buf, off[0]);/* 2 Bytes */
-	    off[0] += 2;
+	    off[0] += 2; /* off = 5 */
 	    fln = new String[flnum];
 	    flv = new int[flnum];
 	    flw = new int[flnum];
@@ -544,34 +548,33 @@ public class Resource
 	}
 
 	public Tileset(File data) throws Exception{
-	    BufferedReader br = new BufferedReader(new FileReader(data));
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
 	    fl = Utils.rnint(br);
 	    flnum = Utils.rnint(br);
 	    flavprob = Utils.rnint(br);
 	    fln = new String[flnum];
 	    flv = new int[flnum];
 	    flw = new int[flnum];
+	    size = 5;
 	    for(int j = 0;j<flnum;j++){
 		fln[j] = Utils.rnstr(br);
+		size += Utils.byte_strd(fln[j]).length;
 		flv[j] = Utils.rnint(br);
 		flw[j] = Utils.rnint(br);
+		size += 3;
 	    }
 	    br.close();
 	}
 
 	public int size() {
-	    int s = 5;
-	    for(int i =0;i<flnum;i++){
-		s += fln[i].length()+4;
-	    }
-	    return(s);
+	    return(size);
 	}
 	public int type() { return TILESET; }
 	public void decode(String res,int i) throws Exception {
 	    File f = new File(res+"//tileset//tileset_"+i+".data");
 	    new File(res+"//tileset//").mkdirs();
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new FileWriter(f,false));
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
 	    bw.write("#TILESET LAYER FOR RES "+ res+ END);
 	    bw.write("#Byte fl"+END);
 	    bw.write(Integer.toString(fl)+END);
@@ -591,7 +594,7 @@ public class Resource
 	    bw.close();
 	}
 	public void encode(OutputStream out) throws Exception {
-	    out.write(Utils.byte_int16d(fl));
+	    out.write(new byte[] { (byte)(fl & 0xFF) });
 	    out.write(Utils.byte_int16d(flnum));
 	    out.write(Utils.byte_int16d(flavprob));
 	    for(int j = 0;j<flnum;++j){
@@ -605,6 +608,7 @@ public class Resource
 
     public class Pagina extends Layer {
 	public final String text;
+	private int size = 0;
 		
 	public Pagina(byte[] buf) {
 	    try {
@@ -615,20 +619,21 @@ public class Resource
 	}
 
 	public Pagina(File data) throws Exception{
-	    BufferedReader br = new BufferedReader(new FileReader(data));
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
 	    text = Utils.rnstr(br);
+	    size = Utils.byte_strd(text).length;
 	    br.close();
 	}
 
 	public int size() {
-	    return(text.length()+1);
+	    return(size);
 	}
 	public int type() { return PAGINA; }		
 	public void decode(String res,int i) throws Exception {
 	    File f = new File(res+"//pagina//pagina_"+i+".data");
 	    new File(res+"//pagina//").mkdirs();
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new FileWriter(f,false));
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
 	    bw.write("#PAGINA LAYER FOR RES "+res+END);
 	    bw.write("#String text"+END);
 	    bw.write(text.replace("\n","\\n")+END);
@@ -649,6 +654,7 @@ public class Resource
 	int adl;
 	int pver;
 	String pr;
+	int size = 0;
 		
 	public AButton(byte[] buf) {
 	    int[] off = new int[1];
@@ -667,33 +673,32 @@ public class Resource
 	}
 
 	public AButton(File data) throws Exception{
-	    BufferedReader br = new BufferedReader(new FileReader(data));
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
 	    pr = Utils.rnstr(br);
+	    size = Utils.byte_strd(pr).length;
 	    pver = Utils.rnint(br);
 	    name = Utils.rnstr(br);
+	    size += Utils.byte_strd(name).length;
 	    preq = Utils.rnstr(br);
+	    size += Utils.byte_strd(preq).length;
 	    hk = (char) Utils.rnint(br);
 	    ad = new String[Utils.rnint(br)];
-	    for(int j = 0;j<ad.length;++j)
+	    for(int j = 0;j<ad.length;++j){
 		ad[j] = Utils.rnstr(br);
+		size += Utils.byte_strd(ad[j]).length;
+	    }
 	    br.close();
 	}
 	
 	public int size() {
-	    int s = pr.length()+3;
-	    s += name.length()+1;
-	    s += preq.length()+1;
-	    s += 4;
-	    for(int i = 0;i<ad.length;++i)
-		s += ad[i].length()+1;
-	    return(s);
+	    return(size + 6);
 	}
 	public int type() { return ABUTTON; }
 	public void decode(String res,int i) throws Exception {
 	    File f = new File(res+"//action//action_"+i+".data");
 	    new File(res+"//action//").mkdirs();
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new FileWriter(f,false));
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
 	    bw.write("#ABUTTON LAYER FOR RES "+res+END);
 	    bw.write("#String pr"+END);
 	    bw.write(pr.replace("\n","\\n")+END);
@@ -731,19 +736,20 @@ public class Resource
     public class Code extends Layer {
 	public final String name;
 	transient public final byte[] data;
-		
+	private int size = 0;
+
 	public Code(byte[] buf) {
 	    int[] off = new int[1];
 	    off[0] = 0;
 	    name = Utils.strd(buf, off);/* String */
 	    data = new byte[buf.length - off[0]]; /* rest */
-	    
 	    System.arraycopy(buf, off[0], data, 0, data.length);
 	}
 
 	public Code(File dat,File clas) throws Exception{
-	    BufferedReader br = new BufferedReader(new FileReader(dat));
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(dat),"UTF-8"));
 	    name = Utils.rnstr(br);
+	    size = Utils.byte_strd(name).length;
 	    data = new byte[(int)clas.length()];
 	    FileInputStream fis = new FileInputStream(clas);
 	    fis.read(data);
@@ -752,16 +758,14 @@ public class Resource
 	}
 
 	public int size() {
-	    int s = name.length() + 1;
-	    s += data.length;
-	    return(s);
+	    return(size + data.length);
 	}
 	public int type() { return CODE; }		
 	public void decode(String res,int i) throws Exception {
 	    File f = new File(res+"//code//code_"+i+".data");
 	    new File(res+"//code//").mkdirs();
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new FileWriter(f,false));
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
 	    bw.write("#CODE LAYER FOR RES "+res+END);
 	    bw.write("#String class_name"+END);
 	    bw.write("#Note: the .class file will have the same name as this file"+END);
@@ -782,41 +786,42 @@ public class Resource
     }static {ltypes.put("code", Code.class);}
 
     public class CodeEntry extends Layer {
+	private int size = 0;
 	private ArrayList<String> p = new ArrayList<String>();
 	private ArrayList<String> e = new ArrayList<String>();
 	public CodeEntry(byte[] buf) {
 	    int[] off = new int[1];
 	    off[0] = 0;
 	    while(off[0] < buf.length) {
-		p.add(Utils.strd(buf, off));/* String */
-		e.add(Utils.strd(buf, off));/* String */
+		p.add(Utils.strd(buf,off));/* String */
+		e.add(Utils.strd(buf,off));/* String */
 	    }
 	}
 
 	public CodeEntry(File data) throws Exception{
-	    BufferedReader br = new BufferedReader(new FileReader(data));
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
+	    String t;
 	    int s = Utils.rnint(br);
 	    for(int j = 0;j<s;++j){
-		p.add(Utils.rnstr(br));
-		e.add(Utils.rnstr(br));
+		t = Utils.rnstr(br);
+		p.add(t);
+		size += Utils.byte_strd(t).length;
+		t = Utils.rnstr(br);
+		e.add(t);
+		size += Utils.byte_strd(t).length;
 	    }
 	    br.close();
 	}
 
 	public int size() {
-	    int s = 0;
-	    for(int i = 0;i<p.size();++i){
-		s += p.get(i).length() + 1;
-		s += e.get(i).length() + 1;
-	    }
-	    return(s);
+	    return(size);
 	}
 	public int type() { return CODEENTRY; }
 	public void decode(String res,int i) throws Exception {
 	    File f = new File(res+"//codeentry//codeentry_"+i+".data");
 	    new File(res+"//codeentry//").mkdirs();
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new FileWriter(f,false));
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
 	    bw.write("#CODEENTRY LAYER FOR RES "+res+END);
 	    bw.write("#int32 length"+END);
 	    bw.write(p.size()+END);
