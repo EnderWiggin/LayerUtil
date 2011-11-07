@@ -249,7 +249,7 @@ public class Resource
 	    BufferedWriter bw = new BufferedWriter(new FileWriter(f,false));
 	    bw.write("#TOOLTIP LAYER FOR RES " + res+END);
 	    bw.write("#String tooltip"+END);
-	    bw.write(t+"\r\n");
+	    bw.write(t.replace("\n","\\n")+END);
 	    bw.flush();
 	    bw.close();
 	}
@@ -581,7 +581,7 @@ public class Resource
 	    bw.write(Integer.toString(flavprob)+END);
 	    for(int j = 0;j<flnum;j++){
 		bw.write("#String fln["+j+"]"+END);
-		bw.write(fln[j]+END);
+		bw.write(fln[j].replace("\n","\\n")+END);
 		bw.write("#uint16d flv["+j+"]"+END);
 		bw.write(Integer.toString(flv[j])+END);
 		bw.write("#byte flw["+j+"]"+END);
@@ -631,7 +631,7 @@ public class Resource
 	    BufferedWriter bw = new BufferedWriter(new FileWriter(f,false));
 	    bw.write("#PAGINA LAYER FOR RES "+res+END);
 	    bw.write("#String text"+END);
-	    bw.write(text+END);
+	    bw.write(text.replace("\n","\\n")+END);
 	    bw.flush();
 	    bw.close();
 	}
@@ -696,20 +696,20 @@ public class Resource
 	    BufferedWriter bw = new BufferedWriter(new FileWriter(f,false));
 	    bw.write("#ABUTTON LAYER FOR RES "+res+END);
 	    bw.write("#String pr"+END);
-	    bw.write(pr+END);
+	    bw.write(pr.replace("\n","\\n")+END);
 	    bw.write("#uint16 pver"+END);
 	    bw.write(Integer.toString(pver)+END);
 	    bw.write("#String name"+END);
-	    bw.write(name+END);
+	    bw.write(name.replace("\n","\\n")+END);
 	    bw.write("#String preq"+END);
-	    bw.write(preq+END);
+	    bw.write(preq.replace("\n","\\n")+END);
 	    bw.write("#uint16 hk"+END);
 	    bw.write(Integer.toString((int)hk)+END);
 	    bw.write("#uint16 ad length"+END);
 	    bw.write(Integer.toString(adl)+END);
 	    for(int j =0;j<adl;++j){
 		bw.write("#String ad["+j+"]"+END);
-		bw.write(ad[j]+END);
+		bw.write(ad[j].replace("\n","\\n")+END);
 	    }
 	    bw.flush();
 	    bw.close();
@@ -720,7 +720,7 @@ public class Resource
 	    out.write(Utils.byte_strd(name));
 	    out.write(Utils.byte_strd(preq));
 	    out.write(Utils.byte_int16d(hk));
-	    out.write(Utils.byte_int16d(adl));
+	    out.write(Utils.byte_int16d(ad.length));
 	    for(int j = 0;j<ad.length;++j)
 		out.write(Utils.byte_strd(ad[j]));
 	}
@@ -765,7 +765,7 @@ public class Resource
 	    bw.write("#CODE LAYER FOR RES "+res+END);
 	    bw.write("#String class_name"+END);
 	    bw.write("#Note: the .class file will have the same name as this file"+END);
-	    bw.write(name+END);
+	    bw.write(name.replace("\n","\\n")+END);
 	    bw.flush();
 	    bw.close();
 	    f = new File(res+"//code//code_"+i+".class");
@@ -822,9 +822,9 @@ public class Resource
 	    bw.write(p.size()+END);
 	    for(int j = 0;j<p.size();++j){
 		bw.write("#String key["+j+"]"+END);
-		bw.write(p.get(j)+END);
+		bw.write(p.get(j).replace("\n","\\n")+END);
 		bw.write("#String value["+j+"]"+END);
-		bw.write(e.get(j)+END);
+		bw.write(e.get(j).replace("\n","\\n")+END);
 	    }
 	    bw.flush();
 	    bw.close();
