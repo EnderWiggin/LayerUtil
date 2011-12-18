@@ -57,18 +57,18 @@ public class Resource
     public static Class<Tooltip> tooltip = Tooltip.class;
 
     static final byte[][] TBUF = {
-	{105,109,97,103,101,0},
-	{116,105,108,101,0},
-	{110,101,103,0},
-	{97,110,105,109,0},
-	{116,105,108,101,115,101,116,0},
-	{112,97,103,105,110,97,0},
-	{97,99,116,105,111,110,0},
-	{97,117,100,105,111,0},
-	{116,111,111,108,116,105,112,0},
-	{109,105,100,105,0},
-	{99,111,100,101,0},
-	{99,111,100,101,101,110,116,114,121,0}
+				{105,109,97,103,101,0},
+				{116,105,108,101,0},
+				{110,101,103,0},
+				{97,110,105,109,0},
+				{116,105,108,101,115,101,116,0},
+				{112,97,103,105,110,97,0},
+				{97,99,116,105,111,110,0},
+				{97,117,100,105,111,0},
+				{116,111,111,108,116,105,112,0},
+				{109,105,100,105,0},
+				{99,111,100,101,0},
+				{99,111,100,101,101,110,116,114,121,0}
     };
     
     static final int IMAGE	= 0;
@@ -99,6 +99,7 @@ public class Resource
      */
 
    
+		public static String skip_value = "1";
     private Collection<? extends Layer> layers = new LinkedList<Layer>();
     public final String out;
     public final String name;
@@ -247,7 +248,6 @@ public class Resource
 	public void decode(String res,int i) throws Exception{
 	    File f = new File(res+"//tooltip//tooltip_"+i+".data");
 	    new File(res+"//tooltip//").mkdirs();
-	    System.out.println(res);
 	    f.createNewFile();
 	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
 	    bw.write("#TOOLTIP LAYER FOR RES " + res+END);
@@ -1016,7 +1016,9 @@ public class Resource
 	BufferedWriter bw = new BufferedWriter(new FileWriter(base+"//meta"));
 	bw.write("#General info for res " + base + END);
 	bw.write("#int16 ver"+END);
-	bw.write(Integer.toString(ver)+END);
+	bw.write(Integer.toString(ver)+END);	
+	bw.write("#int16 skip [1=skip;0=noskip]"+END);
+	bw.write(skip_value+END);
 	bw.flush();
 	bw.close();
     }
