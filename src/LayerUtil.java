@@ -253,7 +253,7 @@ public class LayerUtil
     {
 				if(f.isDirectory())
 						if(f.getName().endsWith(".res") || f.getName().endsWith(".cache")){
-								fls.add(f.getAbsolutePath());
+								fls.add(f.getPath());
 								return;
 						} else {
 								for(File s : f.listFiles())
@@ -269,7 +269,7 @@ public class LayerUtil
     static void rcget1(File f,ArrayList<String> fls)
     {
 				if(f.isFile() && (f.getName().endsWith(".res") || f.getName().endsWith(".cache"))){
-						fls.add(f.getAbsolutePath());
+						fls.add(f.getPath());
 						return;
 				}
 				if(f.isDirectory())
