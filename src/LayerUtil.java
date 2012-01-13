@@ -29,6 +29,8 @@ public class LayerUtil {
     static final String U = "Usage: java -jar LayerUtil.jar [MODIFIER_FLAGS] [ENC/DEC_OPTION] [OPTION ARGS]\n"
 	    + "Possible modifier flags include:\n"
 	    + " -ns             Do not skip processing older files."
+	    + " -np             Do not print files being processed."
+	    + " -ps             Print files being skipped."
 	    + " -h              Display usage\n" + " -v              Displays version number\n"
 	    + " -d [FILE]...    Decodes said files to `dout/[FILE]/*'\n"
 	    + " -e [FILE]...    Encodes said files to `dres/[FILE]/*'\n"
@@ -51,7 +53,8 @@ public class LayerUtil {
 	    + "Type `java -jar LayerUtil.jar -h' for more information\n";
 
     static boolean skip = true;
-    static boolean pflag = true;
+    static boolean print = true;
+    static boolean print_skips = false;
     
     public static void main(String args[]) {
 	try {
@@ -67,7 +70,10 @@ public class LayerUtil {
 			skip = false;
 			break;
 		    case "-np":
-			pflag = false;
+			print = false;
+			break;
+		    case "-ps":
+			print_skips = true;
 			break;
 		    case "-v":
 		    case "-h":
@@ -153,8 +159,8 @@ public class LayerUtil {
 	ArrayList<String> files = new ArrayList<String>();
 	String in = args[st + 1];
 	int in_len = in.length();
-	String out = args[st + 2].replace("\\", "//") + "//";
-	if (pflag) System.out.println("Finding files...");
+	String out = args[st + 2].replace("\\", "/") + "/";
+	if (print) System.out.println("Processing resources in "+in);
 	if (fl == 1) {
 	    rcdget(new File(in), files);
 	} else {
@@ -170,12 +176,12 @@ public class LayerUtil {
 		    long in_date = getDate(in+name);
 		    long out_date = getDate(out+name);
 		    if(out_date > in_date){
-			if (pflag) System.out.println("SKIPPED => " + name);
+			if (print_skips) System.out.println("SKIPPED => " + name);
 			continue;
 		    }
 		}
-		if (pflag) System.out.println("ATTEMPT => " + name);
-		r = new Resource(s, "//" + name, out, fl == 1 ? false : true);
+		if (print) System.out.println("ATTEMPT => " + name);
+		r = new Resource(s, "/" + name, out, fl == 1 ? false : true);
 		if (fl == 1) {
 		    r.encodeall();
 		} else {

@@ -40,7 +40,7 @@ import java.awt.image.BufferedImage;
 public class Resource {
     static final String SIG = "Haven Resource 1";
     static final byte[] BSIG = { 72, 97, 118, 101, 110, 32, 82, 101, 115, 111, 117, 114, 99, 101, 32, 49 };
-    public static String OUT = "dout//";
+    public static String OUT = "dout/";
     private static final String END = "\r\n";
     private static Map<String, Class<? extends Layer>> ltypes = new TreeMap<String, Class<? extends Layer>>();
     public static Class<Image> imgc = Image.class;
@@ -189,8 +189,8 @@ public class Resource {
 	}
 
 	public void decode(String res, int i) throws Exception {
-	    new File(res + "//image//").mkdirs();
-	    File f = new File(res + "//image//image_" + i + ".data");
+	    new File(res + "/image/").mkdirs();
+	    File f = new File(res + "/image/image_" + i + ".data");
 	    f.createNewFile();
 	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
 	    bw.write("#IMAGE LAYER FOR RES " + res + END);
@@ -207,7 +207,7 @@ public class Resource {
 	    bw.write(Integer.toString(o.y) + END);
 	    bw.flush();
 	    bw.close();
-	    ImageIO.write(img, "png", new File(res + "//image//image_" + i + ".png"));
+	    ImageIO.write(img, "png", new File(res + "/image/image_" + i + ".png"));
 	}
 
 	public void encode(OutputStream out) throws Exception {
@@ -256,8 +256,8 @@ public class Resource {
 	}
 
 	public void decode(String res, int i) throws Exception {
-	    File f = new File(res + "//tooltip//tooltip_" + i + ".data");
-	    new File(res + "//tooltip//").mkdirs();
+	    File f = new File(res + "/tooltip/tooltip_" + i + ".data");
+	    new File(res + "/tooltip/").mkdirs();
 	    f.createNewFile();
 	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
 	    bw.write("#TOOLTIP LAYER FOR RES " + res + END);
@@ -321,8 +321,8 @@ public class Resource {
 	}
 
 	public void decode(String res, int i) throws Exception {
-	    File f = new File(res + "//tile//tile_" + i + ".data");
-	    new File(res + "//tile//").mkdirs();
+	    File f = new File(res + "/tile/tile_" + i + ".data");
+	    new File(res + "/tile/").mkdirs();
 	    f.createNewFile();
 	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
 	    bw.write("#TILE LAYER FOR RES " + res + END);
@@ -334,7 +334,7 @@ public class Resource {
 	    bw.write(Integer.toString(w) + END);
 	    bw.flush();
 	    bw.close();
-	    ImageIO.write(img, "png", new File(res + "//tile//tile_" + i + ".png"));
+	    ImageIO.write(img, "png", new File(res + "/tile/tile_" + i + ".png"));
 	}
 
 	public void encode(OutputStream out) throws Exception {
@@ -425,8 +425,8 @@ public class Resource {
 	}
 
 	public void decode(String res, int i) throws Exception {
-	    File f = new File(res + "//neg//neg_" + i + ".data");
-	    new File(res + "//neg//").mkdirs();
+	    File f = new File(res + "/neg/neg_" + i + ".data");
+	    new File(res + "/neg/").mkdirs();
 	    f.createNewFile();
 	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
 	    bw.write("#NEG LAYER FOR RES: " + res + END);
@@ -526,8 +526,8 @@ public class Resource {
 	}
 
 	public void decode(String res, int i) throws Exception {
-	    File f = new File(res + "//anim//anim_" + i + ".data");
-	    new File(res + "//anim//").mkdirs();
+	    File f = new File(res + "/anim/anim_" + i + ".data");
+	    new File(res + "/anim/").mkdirs();
 	    f.createNewFile();
 	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
 	    bw.write("#ANIM LAYER FOR RES " + res + END);
@@ -618,8 +618,8 @@ public class Resource {
 	}
 
 	public void decode(String res, int i) throws Exception {
-	    File f = new File(res + "//tileset//tileset_" + i + ".data");
-	    new File(res + "//tileset//").mkdirs();
+	    File f = new File(res + "/tileset/tileset_" + i + ".data");
+	    new File(res + "/tileset/").mkdirs();
 	    f.createNewFile();
 	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
 	    bw.write("#TILESET LAYER FOR RES " + res + END);
@@ -688,8 +688,8 @@ public class Resource {
 	}
 
 	public void decode(String res, int i) throws Exception {
-	    File f = new File(res + "//pagina//pagina_" + i + ".data");
-	    new File(res + "//pagina//").mkdirs();
+	    File f = new File(res + "/pagina/pagina_" + i + ".data");
+	    new File(res + "/pagina/").mkdirs();
 	    f.createNewFile();
 	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
 	    bw.write("#PAGINA LAYER FOR RES " + res + END);
@@ -764,8 +764,8 @@ public class Resource {
 	}
 
 	public void decode(String res, int i) throws Exception {
-	    File f = new File(res + "//action//action_" + i + ".data");
-	    new File(res + "//action//").mkdirs();
+	    File f = new File(res + "/action/action_" + i + ".data");
+	    new File(res + "/action/").mkdirs();
 	    f.createNewFile();
 	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
 	    bw.write("#ABUTTON LAYER FOR RES " + res + END);
@@ -841,8 +841,8 @@ public class Resource {
 	}
 
 	public void decode(String res, int i) throws Exception {
-	    File f = new File(res + "//code//code_" + i + ".data");
-	    new File(res + "//code//").mkdirs();
+	    File f = new File(res + "/code/code_" + i + ".data");
+	    new File(res + "/code/").mkdirs();
 	    f.createNewFile();
 	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
 	    bw.write("#CODE LAYER FOR RES " + res + END);
@@ -851,7 +851,7 @@ public class Resource {
 	    bw.write(name.replace("\n", "\\n") + END);
 	    bw.flush();
 	    bw.close();
-	    f = new File(res + "//code//code_" + i + ".class");
+	    f = new File(res + "/code/code_" + i + ".class");
 	    FileOutputStream fout = new FileOutputStream(f);
 	    fout.write(data);
 	    fout.flush();
@@ -909,8 +909,8 @@ public class Resource {
 	}
 
 	public void decode(String res, int i) throws Exception {
-	    File f = new File(res + "//codeentry//codeentry_" + i + ".data");
-	    new File(res + "//codeentry//").mkdirs();
+	    File f = new File(res + "/codeentry/codeentry_" + i + ".data");
+	    new File(res + "/codeentry/").mkdirs();
 	    f.createNewFile();
 	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
 	    bw.write("#CODEENTRY LAYER FOR RES " + res + END);
@@ -968,8 +968,8 @@ public class Resource {
 	}
 
 	public void decode(String res, int i) throws Exception {
-	    File f = new File(res + "//audio//audio_" + i + ".ogg");
-	    new File(res + "//audio//").mkdirs();
+	    File f = new File(res + "/audio/audio_" + i + ".ogg");
+	    new File(res + "/audio/").mkdirs();
 	    f.createNewFile();
 	    FileOutputStream fout = new FileOutputStream(f);
 	    fout.write(raw);
@@ -1010,8 +1010,8 @@ public class Resource {
 	public int size() { return(raw.length); }
 	public int type() { return MUSIC; }
 	public void decode(String res, int i) throws Exception {
-	    File f= new File(res+"//midi//midi_"+i+".midi"); /* what file type is this idk? */
-	    new File(res + "//midi//").mkdirs();
+	    File f= new File(res+"/midi/midi_"+i+".midi"); /* what file type is this idk? */
+	    new File(res + "/midi/").mkdirs();
 	    f.createNewFile();
 	    FileOutputStream fout = new FileOutputStream(f);
 	    fout.write(raw);
@@ -1126,7 +1126,7 @@ public class Resource {
 	for (Layer l : layers) {
 	    l.decode(base, c[l.type()]++);
 	}
-	BufferedWriter bw = new BufferedWriter(new FileWriter(base + "//meta"));
+	BufferedWriter bw = new BufferedWriter(new FileWriter(base + "/meta"));
 	bw.write("#General info for res " + base + END);
 	bw.write("#int16 ver" + END);
 	bw.write(Integer.toString(ver) + END);
@@ -1220,7 +1220,7 @@ public class Resource {
 	}
 	this.layers = layers;
 
-	BufferedReader br = new BufferedReader(new FileReader(full + "//meta"));
+	BufferedReader br = new BufferedReader(new FileReader(full + "/meta"));
 	ver = Utils.rnint(br);
 	br.close();
     }
