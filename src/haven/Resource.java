@@ -37,12 +37,9 @@ import javax.imageio.*;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
-public class Resource
-{
-    static final String SIG  = "Haven Resource 1";
-    static final byte[] BSIG = {72,97,118,101,110,32,
-				82,101,115,111,117,114,99,101,32,
-				49};
+public class Resource {
+    static final String SIG = "Haven Resource 1";
+    static final byte[] BSIG = { 72, 97, 118, 101, 110, 32, 82, 101, 115, 111, 117, 114, 99, 101, 32, 49 };
     public static String OUT = "dout//";
     private static final String END = "\r\n";
     private static Map<String, Class<? extends Layer>> ltypes = new TreeMap<String, Class<? extends Layer>>();
@@ -70,19 +67,19 @@ public class Resource
 				{99,111,100,101,0},
 				{99,111,100,101,101,110,116,114,121,0}
     };
-    
-    static final int IMAGE	= 0;
-    static final int TILE	= 1;
-    static final int NEG	= 2;
-    static final int ANIM	= 3;
-    static final int TILESET	= 4;
-    static final int PAGINA	= 5;
-    static final int ABUTTON	= 6;
-    static final int AUDIO	= 7;
-    static final int TOOLTIP	= 8;
-    static final int MUSIC	= 9;
-    static final int CODE	= 10;
-    static final int CODEENTRY	= 11;
+
+    static final int IMAGE = 0;
+    static final int TILE = 1;
+    static final int NEG = 2;
+    static final int ANIM = 3;
+    static final int TILESET = 4;
+    static final int PAGINA = 5;
+    static final int ABUTTON = 6;
+    static final int AUDIO = 7;
+    static final int TOOLTIP = 8;
+    static final int MUSIC = 9;
+    static final int CODE = 10;
+    static final int CODEENTRY = 11;
     /*
       IMAGE	=> .data + .png
       TILE	=> .data + .png
@@ -98,15 +95,13 @@ public class Resource
       MUSIC	=> .music
      */
 
-   
-		public static String skip_value = "1";
     private Collection<? extends Layer> layers = new LinkedList<Layer>();
     public final String out;
     public final String name;
     public int ver;
-    
+
     public static Coord cdec(byte[] buf, int off) {
-	return(new Coord(Utils.int16d(buf, off), Utils.int16d(buf, off + 2)));
+	return (new Coord(Utils.int16d(buf, off), Utils.int16d(buf, off + 2)));
     }
 
     public static class LoadException extends RuntimeException {
@@ -121,18 +116,22 @@ public class Resource
 	    super(msg, cause);
 	    this.res = res;
 	}
-	    
+
 	public LoadException(Throwable cause, Resource res) {
 	    super("Load error in resource " + res.toString() + "\n" + cause + "\n");
 	    this.res = res;
 	}
     }
 
-    public abstract class Layer implements Serializable{
+    public abstract class Layer implements Serializable {
 	public abstract void init();
-	public abstract int  size();
-	public abstract int  type();
-	public abstract void decode(String r,int i) throws Exception;
+
+	public abstract int size();
+
+	public abstract int type();
+
+	public abstract void decode(String r, int i) throws Exception;
+
 	public abstract void encode(OutputStream f) throws Exception;
     }
 
@@ -143,9 +142,9 @@ public class Resource
 	public final boolean nooff;
 	public final int id;
 	public Coord o;
-	
+
 	public Image(byte[] buf) {
-	    z = Utils.int16d(buf, 0);/* 2 bytes */ 
+	    z = Utils.int16d(buf, 0);/* 2 bytes */
 	    subz = Utils.int16d(buf, 2);/* 2 bytes */
 	    /* Obsolete flag 1: Layered */
 	    nooff = (buf[4] & 2) != 0;/* byte */
@@ -154,72 +153,77 @@ public class Resource
 
 	    try {
 		img = ImageIO.read(new ByteArrayInputStream(buf, 11, buf.length - 11));
-	    } catch(IOException e) {
-		throw(new LoadException(e, Resource.this));
+	    } catch (IOException e) {
+		throw (new LoadException(e, Resource.this));
 	    }
-	    if(img == null)
-		throw(new LoadException("Invalid image data in " + name, Resource.this));
-	}	
+	    if (img == null) throw (new LoadException("Invalid image data in " + name, Resource.this));
+	}
 
-	public Image(File data,File png) throws Exception{
-	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
+	public Image(File data, File png) throws Exception {
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data), "UTF-8"));
 	    z = Utils.rnint(br);
 	    subz = Utils.rnint(br);
 	    nooff = (Utils.rnint(br) & 2) != 0;
 	    id = Utils.rnint(br);
-	    o = new Coord(Utils.rnint(br),Utils.rnint(br));
+	    o = new Coord(Utils.rnint(br), Utils.rnint(br));
 	    img = ImageIO.read(png);
 	    br.close();
 	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	    ImageIO.write(img,"png",baos);
+	    ImageIO.write(img, "png", baos);
 	    baos.flush();
 	    raw = baos.toByteArray();
 	    baos.close();
 	}
 
-
 	public int size() {
 	    int s = 11;
 	    s += raw.length;
-	    return(s);
+	    return (s);
 	}
-	public int type() { return IMAGE; }
-	public void init() {}
 
-	public void decode(String res,int i) throws Exception
-	{
-	    new File(res+"//image//").mkdirs();
-	    File f = new File(res+"//image//image_"+i+".data");
+	public int type() {
+	    return IMAGE;
+	}
+
+	public void init() {
+	}
+
+	public void decode(String res, int i) throws Exception {
+	    new File(res + "//image//").mkdirs();
+	    File f = new File(res + "//image//image_" + i + ".data");
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
-	    bw.write("#IMAGE LAYER FOR RES "+res+END);
-	    bw.write("#int16 z"+END);
-	    bw.write(Integer.toString(z)+END);
-	    bw.write("#int16 subz"+END);
-	    bw.write(Integer.toString(subz)+END);
-	    bw.write("#Byte nooff"+END);
-	    bw.write(Integer.toString(nooff?1:0)+END);
-	    bw.write("#int16 id"+END);
-	    bw.write(Integer.toString(id)+END);
-	    bw.write("#Coord o"+END);
-	    bw.write(Integer.toString(o.x)+END);
-	    bw.write(Integer.toString(o.y)+END);
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
+	    bw.write("#IMAGE LAYER FOR RES " + res + END);
+	    bw.write("#int16 z" + END);
+	    bw.write(Integer.toString(z) + END);
+	    bw.write("#int16 subz" + END);
+	    bw.write(Integer.toString(subz) + END);
+	    bw.write("#Byte nooff" + END);
+	    bw.write(Integer.toString(nooff ? 1 : 0) + END);
+	    bw.write("#int16 id" + END);
+	    bw.write(Integer.toString(id) + END);
+	    bw.write("#Coord o" + END);
+	    bw.write(Integer.toString(o.x) + END);
+	    bw.write(Integer.toString(o.y) + END);
 	    bw.flush();
 	    bw.close();
-	    ImageIO.write(img,"png",new File(res+"//image//image_"+i+".png"));
+	    ImageIO.write(img, "png", new File(res + "//image//image_" + i + ".png"));
 	}
 
-	public void encode(OutputStream out) throws Exception
-	{
+	public void encode(OutputStream out) throws Exception {
 	    out.write(Utils.byte_int16d(z)); /* 2 bytes */
 	    out.write(Utils.byte_int16d(subz)); /* 2 bytes */
-	    out.write(new byte[] { (byte)(nooff?1:0) }); /* 1 byte  */
+	    out.write(new byte[] { (byte) (nooff ? 1 : 0) }); /* 1 byte */
 	    out.write(Utils.byte_int16d(id)); /* 2 bytes */
 	    out.write(Utils.byte_int16d(o.x)); /* 2 bytes */
 	    out.write(Utils.byte_int16d(o.y)); /* 2 bytes */
 	    out.write(raw); /* img bytes */
 	}
-    }static {ltypes.put("image", Image.class);}
+    }
+
+    static {
+	ltypes.put("image", Image.class);
+    }
 
     public class Tooltip extends Layer {
 	public final String t;
@@ -228,39 +232,49 @@ public class Resource
 	public Tooltip(byte[] buf) {
 	    try {
 		t = new String(buf, "UTF-8");
-	    } catch(UnsupportedEncodingException e) {
-		throw(new LoadException(e, Resource.this));
+	    } catch (UnsupportedEncodingException e) {
+		throw (new LoadException(e, Resource.this));
 	    }
 	}
 
-	public Tooltip(File data) throws Exception{
-	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
+	public Tooltip(File data) throws Exception {
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data), "UTF-8"));
 	    t = Utils.rnstr(br);
 	    size = Utils.byte_strd(t).length;
 	    br.close();
 	}
 
 	public int size() {
-	    return(size);
+	    return (size);
 	}
-	public int type() { return TOOLTIP; }                
-	public void init() {}
-	public void decode(String res,int i) throws Exception{
-	    File f = new File(res+"//tooltip//tooltip_"+i+".data");
-	    new File(res+"//tooltip//").mkdirs();
+
+	public int type() {
+	    return TOOLTIP;
+	}
+
+	public void init() {
+	}
+
+	public void decode(String res, int i) throws Exception {
+	    File f = new File(res + "//tooltip//tooltip_" + i + ".data");
+	    new File(res + "//tooltip//").mkdirs();
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
-	    bw.write("#TOOLTIP LAYER FOR RES " + res+END);
-	    bw.write("#String tooltip"+END);
-	    bw.write(t.replace("\n","\\n")+END);
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
+	    bw.write("#TOOLTIP LAYER FOR RES " + res + END);
+	    bw.write("#String tooltip" + END);
+	    bw.write(t.replace("\n", "\\n") + END);
 	    bw.flush();
 	    bw.close();
 	}
 
-	public void encode(OutputStream out) throws Exception{
+	public void encode(OutputStream out) throws Exception {
 	    out.write(Utils.byte_strd(t)); /* str bytes */
 	}
-    }static {ltypes.put("tooltip", Tooltip.class);}
+    }
+
+    static {
+	ltypes.put("tooltip", Tooltip.class);
+    }
 
     public class Tile extends Layer {
 	transient BufferedImage img;
@@ -268,66 +282,75 @@ public class Resource
 	public int id;
 	int w;
 	char t;
-		
+
 	public Tile(byte[] buf) {
-	    t = (char)Utils.ub(buf[0]);/* 1 Byte */
+	    t = (char) Utils.ub(buf[0]);/* 1 Byte */
 	    id = Utils.ub(buf[1]);/* 1 Byte */
 	    w = Utils.uint16d(buf, 2);/* 2 Bytes */
 	    try {
 		img = ImageIO.read(new ByteArrayInputStream(buf, 4, buf.length - 4));
-	    } catch(IOException e) {
-		throw(new LoadException(e, Resource.this));
+	    } catch (IOException e) {
+		throw (new LoadException(e, Resource.this));
 	    }
-	    if(img == null)
-		throw(new LoadException("Invalid image data in " + name, Resource.this));
+	    if (img == null) throw (new LoadException("Invalid image data in " + name, Resource.this));
 	}
 
-	public Tile(File data,File png) throws Exception{
-	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
-	    t =(char) Utils.rnint(br);
+	public Tile(File data, File png) throws Exception {
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data), "UTF-8"));
+	    t = (char) Utils.rnint(br);
 	    id = Utils.rnint(br);
 	    w = Utils.rnint(br);
 	    img = ImageIO.read(png);
 	    br.close();
 
 	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	    ImageIO.write(img,"png",baos);
+	    ImageIO.write(img, "png", baos);
 	    baos.flush();
 	    raw = baos.toByteArray();
 	    baos.close();
 	}
-	
-	public int size(){
+
+	public int size() {
 	    int s = 4;
-	    s+=raw.length;
-	    return(s);	    
+	    s += raw.length;
+	    return (s);
 	}
-	public int type() { return TILE; }
-	public void decode(String res,int i) throws Exception {
-	    File f = new File(res+"//tile//tile_"+i+".data");
-	    new File(res+"//tile//").mkdirs();
+
+	public int type() {
+	    return TILE;
+	}
+
+	public void decode(String res, int i) throws Exception {
+	    File f = new File(res + "//tile//tile_" + i + ".data");
+	    new File(res + "//tile//").mkdirs();
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
-	    bw.write("#TILE LAYER FOR RES "+res+END);
-	    bw.write("#Byte t"+END);
-	    bw.write(Integer.toString((int)t)+END);
-	    bw.write("#Byte id"+END);
-	    bw.write(Integer.toString(id)+END);
-	    bw.write("#uint16 w"+END);
-	    bw.write(Integer.toString(w)+END);
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
+	    bw.write("#TILE LAYER FOR RES " + res + END);
+	    bw.write("#Byte t" + END);
+	    bw.write(Integer.toString((int) t) + END);
+	    bw.write("#Byte id" + END);
+	    bw.write(Integer.toString(id) + END);
+	    bw.write("#uint16 w" + END);
+	    bw.write(Integer.toString(w) + END);
 	    bw.flush();
 	    bw.close();
-	    ImageIO.write(img,"png",new File(res+"//tile//tile_"+i+".png"));
+	    ImageIO.write(img, "png", new File(res + "//tile//tile_" + i + ".png"));
 	}
-	
+
 	public void encode(OutputStream out) throws Exception {
-	    out.write(new byte[] { (byte)(t & 0xFF) });   /* 1 byte */
-	    out.write(new byte[] { (byte)(id & 0xFF) } ); /* 1 byte */
+	    out.write(new byte[] { (byte) (t & 0xFF) }); /* 1 byte */
+	    out.write(new byte[] { (byte) (id & 0xFF) }); /* 1 byte */
 	    out.write(Utils.byte_int16d(w)); /* 2 bytes */
 	    out.write(raw); /* img bytes */
 	}
-	public void init() {}
-    }static {ltypes.put("tile", Tile.class);}
+
+	public void init() {
+	}
+    }
+
+    static {
+	ltypes.put("tile", Tile.class);
+    }
 
     public class Neg extends Layer {
 	public Coord cc;
@@ -337,102 +360,107 @@ public class Resource
 
 	public int en;
 	public ArrayList<Integer> cns = new ArrayList<Integer>();
-	public ArrayList<Integer> epds= new ArrayList<Integer>();
+	public ArrayList<Integer> epds = new ArrayList<Integer>();
 
 	public Neg(byte[] buf) {
 	    int off;
-			
+
 	    cc = cdec(buf, 0);/* 4 bytes */
 	    bc = cdec(buf, 4);/* 4 bytes */
 	    bs = cdec(buf, 8);/* 4 bytes */
 	    sz = cdec(buf, 12);/* 4 bytes */
-	    //bc = MapView.s2m(bc);
-	    //bs = MapView.s2m(bs).add(bc.inv());
+	    // bc = MapView.s2m(bc);
+	    // bs = MapView.s2m(bs).add(bc.inv());
 	    ep = new Coord[8][0];
 	    en = buf[16];/* 1 byte */
 	    off = 17;
-	    for(int i = 0; i < en; i++) {
+	    for (int i = 0; i < en; i++) {
 		int epid = buf[off]; /* 1 byte */
 		int cn = Utils.uint16d(buf, off + 1); /* 2 bytes */
 		epds.add(epid);
 		cns.add(cn);
 		off += 3;
 		ep[epid] = new Coord[cn];
-		for(int o = 0; o < cn; o++) {
+		for (int o = 0; o < cn; o++) {
 		    ep[epid][o] = cdec(buf, off); /* 4 bytes */
 		    off += 4;
 		}
 	    }
 	}
-	
-	public Neg(File data) throws Exception{
-	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
-	    cc = new Coord(Utils.rnint(br),Utils.rnint(br)); /* 4 bytes */
-	    bc = new Coord(Utils.rnint(br),Utils.rnint(br)); /* 4 bytes */
-	    bs = new Coord(Utils.rnint(br),Utils.rnint(br)); /* 4 bytes */
-	    sz = new Coord(Utils.rnint(br),Utils.rnint(br)); /* 4 bytes */
+
+	public Neg(File data) throws Exception {
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data), "UTF-8"));
+	    cc = new Coord(Utils.rnint(br), Utils.rnint(br)); /* 4 bytes */
+	    bc = new Coord(Utils.rnint(br), Utils.rnint(br)); /* 4 bytes */
+	    bs = new Coord(Utils.rnint(br), Utils.rnint(br)); /* 4 bytes */
+	    sz = new Coord(Utils.rnint(br), Utils.rnint(br)); /* 4 bytes */
 	    ep = new Coord[8][0];
 	    en = Utils.rnint(br); /* 1 byte */
-	    for(int i = 0;i<en;++i){
+	    for (int i = 0; i < en; ++i) {
 		int epid = Utils.rnint(br); /* 1 byte */
 		int cn = Utils.rnint(br); /* 2 bytes */
 		epds.add(epid);
 		cns.add(cn);
 		ep[epid] = new Coord[cn];
-		for(int o=0;o<cn;++o){
-		    ep[epid][o] = new Coord(Utils.rnint(br),Utils.rnint(br));
+		for (int o = 0; o < cn; ++o) {
+		    ep[epid][o] = new Coord(Utils.rnint(br), Utils.rnint(br));
 		}
 	    }
 	    br.close();
-	}	
+	}
 
 	public int size() {
 	    int s = 17;
-	    for(int i = 0;i<cns.size();++i){
+	    for (int i = 0; i < cns.size(); ++i) {
 		s += 3;
-		for(int o = 0;o<cns.get(i);++o){
+		for (int o = 0; o < cns.get(i); ++o) {
 		    s += 4;
 		}
 	    }
-	    return(s);
+	    return (s);
 	}
-	public int type() { return NEG; }
-	public void decode(String res,int i) throws Exception{
-	    File f = new File(res+"//neg//neg_"+i+".data");
-	    new File(res+"//neg//").mkdirs();
+
+	public int type() {
+	    return NEG;
+	}
+
+	public void decode(String res, int i) throws Exception {
+	    File f = new File(res + "//neg//neg_" + i + ".data");
+	    new File(res + "//neg//").mkdirs();
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
-	    bw.write("#NEG LAYER FOR RES: "+res+END);
-	    bw.write("#Coord cc"+END);
-	    bw.write(Integer.toString(cc.x)+END);
-	    bw.write(Integer.toString(cc.y)+END);
-	    bw.write("#Coord bc"+END);
-	    bw.write(Integer.toString(bc.x)+END);
-	    bw.write(Integer.toString(bc.y)+END);
-	    bw.write("#Coord bs"+END);
-	    bw.write(Integer.toString(bs.x)+END);
-	    bw.write(Integer.toString(bs.y)+END);
-	    bw.write("#Coord sz"+END);
-	    bw.write(Integer.toString(sz.x)+END);
-	    bw.write(Integer.toString(sz.y)+END);
-	    bw.write("#Byte en"+END);
-	    bw.write(Integer.toString(en)+END);
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
+	    bw.write("#NEG LAYER FOR RES: " + res + END);
+	    bw.write("#Coord cc" + END);
+	    bw.write(Integer.toString(cc.x) + END);
+	    bw.write(Integer.toString(cc.y) + END);
+	    bw.write("#Coord bc" + END);
+	    bw.write(Integer.toString(bc.x) + END);
+	    bw.write(Integer.toString(bc.y) + END);
+	    bw.write("#Coord bs" + END);
+	    bw.write(Integer.toString(bs.x) + END);
+	    bw.write(Integer.toString(bs.y) + END);
+	    bw.write("#Coord sz" + END);
+	    bw.write(Integer.toString(sz.x) + END);
+	    bw.write(Integer.toString(sz.y) + END);
+	    bw.write("#Byte en" + END);
+	    bw.write(Integer.toString(en) + END);
 	    int j;
-	    for(j = 0;j<cns.size();++j){
-		bw.write("#Byte epid"+END);
-		bw.write(Integer.toString(epds.get(j))+END);
-		bw.write("#uint16 cn"+END);
-		bw.write(Integer.toString(cns.get(j))+END);
-		for(int o = 0;o<cns.get(j);o++){
-		    bw.write("#Coord ep["+epds.get(j)+"]["+o+"]"+END);
-		    bw.write(Integer.toString(ep[epds.get(j)][o].x)+END);
-		    bw.write(Integer.toString(ep[epds.get(j)][o].y)+END);
+	    for (j = 0; j < cns.size(); ++j) {
+		bw.write("#Byte epid" + END);
+		bw.write(Integer.toString(epds.get(j)) + END);
+		bw.write("#uint16 cn" + END);
+		bw.write(Integer.toString(cns.get(j)) + END);
+		for (int o = 0; o < cns.get(j); o++) {
+		    bw.write("#Coord ep[" + epds.get(j) + "][" + o + "]" + END);
+		    bw.write(Integer.toString(ep[epds.get(j)][o].x) + END);
+		    bw.write(Integer.toString(ep[epds.get(j)][o].y) + END);
 		}
 	    }
 	    bw.flush();
 	    bw.close();
 	}
-	public void encode(OutputStream out) throws Exception{
+
+	public void encode(OutputStream out) throws Exception {
 	    out.write(Utils.byte_int16d(cc.x));
 	    out.write(Utils.byte_int16d(cc.y));
 	    out.write(Utils.byte_int16d(bc.x));
@@ -441,82 +469,97 @@ public class Resource
 	    out.write(Utils.byte_int16d(bs.y));
 	    out.write(Utils.byte_int16d(sz.x));
 	    out.write(Utils.byte_int16d(sz.y));
-	    out.write(new byte[] { (byte)(en & 0xFF) });
-	    for(int j = 0;j<cns.size();++j){
-		out.write(new byte[] { (byte)(epds.get(j) & 0xFF) });
+	    out.write(new byte[] { (byte) (en & 0xFF) });
+	    for (int j = 0; j < cns.size(); ++j) {
+		out.write(new byte[] { (byte) (epds.get(j) & 0xFF) });
 		out.write(Utils.byte_int16d(cns.get(j)));
-		for(int o = 0;o<cns.get(j);++o){
+		for (int o = 0; o < cns.get(j); ++o) {
 		    out.write(Utils.byte_int16d(ep[epds.get(j)][o].x));
 		    out.write(Utils.byte_int16d(ep[epds.get(j)][o].y));
 		}
 	    }
 	}
-	public void init() {}	
-    }static {ltypes.put("neg", Neg.class);}
+
+	public void init() {
+	}
+    }
+
+    static {
+	ltypes.put("neg", Neg.class);
+    }
 
     public class Anim extends Layer {
 	private int[] ids;
 	public int id, d;
 	public Image[][] f;
-		
+
 	public Anim(byte[] buf) {
 	    id = Utils.int16d(buf, 0);/* 2 bytes */
 	    d = Utils.uint16d(buf, 2);/* 2 bytes */
 	    ids = new int[Utils.uint16d(buf, 4)];/* 2 bytes */
-	    if(buf.length - 6 != ids.length * 2) 
-		throw(new LoadException("Invalid anim descriptor in " + name, Resource.this));
-		for(int i = 0; i < ids.length; i++){
-		    ids[i] = Utils.int16d(buf, 6 + (i * 2)); /* 2 bytes */
-		}
+	    if (buf.length - 6 != ids.length * 2)
+		throw (new LoadException("Invalid anim descriptor in " + name, Resource.this));
+	    for (int i = 0; i < ids.length; i++) {
+		ids[i] = Utils.int16d(buf, 6 + (i * 2)); /* 2 bytes */
+	    }
 	}
-	
-	public Anim(File data) throws Exception{
-	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
+
+	public Anim(File data) throws Exception {
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data), "UTF-8"));
 	    id = Utils.rnint(br);
 	    d = Utils.rnint(br);
 	    ids = new int[Utils.rnint(br)];
-	    for(int j = 0;j<ids.length;++j){
+	    for (int j = 0; j < ids.length; ++j) {
 		ids[j] = Utils.rnint(br);
 	    }
 	    br.close();
-	}	
-
+	}
 
 	public int size() {
 	    int s = 6;
 	    s += (2 * ids.length);
-	    return(s);
+	    return (s);
 	}
 
-	public int type() { return ANIM; }
-	public void decode(String res,int i) throws Exception{
-	    File f = new File(res+"//anim//anim_"+i+".data");
-	    new File(res+"//anim//").mkdirs();
+	public int type() {
+	    return ANIM;
+	}
+
+	public void decode(String res, int i) throws Exception {
+	    File f = new File(res + "//anim//anim_" + i + ".data");
+	    new File(res + "//anim//").mkdirs();
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
-	    bw.write("#ANIM LAYER FOR RES "+res+END);
-	    bw.write("#int16 id [keep -1]"+END);
-	    bw.write(Integer.toString(id)+END);
-	    bw.write("#uint16 d [duration of animation]"+END);
-	    bw.write(Integer.toString(d)+END);
-	    bw.write("#uint16 ids [length]"+END);
-	    bw.write(Integer.toString(ids.length)+END);
-	    for(int j = 0;j<ids.length;j++){
-		bw.write("#uint16 ids["+j+"]"+END);
-		bw.write(Integer.toString(ids[j])+END);
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
+	    bw.write("#ANIM LAYER FOR RES " + res + END);
+	    bw.write("#int16 id [keep -1]" + END);
+	    bw.write(Integer.toString(id) + END);
+	    bw.write("#uint16 d [duration of animation]" + END);
+	    bw.write(Integer.toString(d) + END);
+	    bw.write("#uint16 ids [length]" + END);
+	    bw.write(Integer.toString(ids.length) + END);
+	    for (int j = 0; j < ids.length; j++) {
+		bw.write("#uint16 ids[" + j + "]" + END);
+		bw.write(Integer.toString(ids[j]) + END);
 	    }
 	    bw.flush();
 	    bw.close();
 	}
-	public void encode(OutputStream out) throws Exception{
+
+	public void encode(OutputStream out) throws Exception {
 	    out.write(Utils.byte_int16d(id));
 	    out.write(Utils.byte_int16d(d));
 	    out.write(Utils.byte_int16d(ids.length));
-	    for(int i =0;i<ids.length;++i)
+	    for (int i = 0; i < ids.length; ++i)
 		out.write(Utils.byte_int16d(ids[i]));
 	}
-	public void init() {}
-    }static {ltypes.put("anim", Anim.class);}    
+
+	public void init() {
+	}
+    }
+
+    static {
+	ltypes.put("anim", Anim.class);
+    }
 
     public class Tileset extends Layer {
 	private int fl;
@@ -527,19 +570,19 @@ public class Resource
 	int flavprob;
 
 	private int size = 0;
-		
+
 	public Tileset(byte[] buf) {
 	    int[] off = new int[1];
 	    off[0] = 0;
-	    fl = Utils.ub(buf[off[0]++]); /* 1 Byte off = 0*/
-	    flnum = Utils.uint16d(buf, off[0]); /* 2 Bytes off  = 1*/
+	    fl = Utils.ub(buf[off[0]++]); /* 1 Byte off = 0 */
+	    flnum = Utils.uint16d(buf, off[0]); /* 2 Bytes off = 1 */
 	    off[0] += 2; /* off = 3 */
 	    flavprob = Utils.uint16d(buf, off[0]);/* 2 Bytes */
 	    off[0] += 2; /* off = 5 */
 	    fln = new String[flnum];
 	    flv = new int[flnum];
 	    flw = new int[flnum];
-	    for(int i = 0; i < flnum; i++) {
+	    for (int i = 0; i < flnum; i++) {
 		fln[i] = Utils.strd(buf, off); /* String */
 		flv[i] = Utils.uint16d(buf, off[0]); /* 2 Bytes */
 		off[0] += 2;
@@ -547,8 +590,8 @@ public class Resource
 	    }
 	}
 
-	public Tileset(File data) throws Exception{
-	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
+	public Tileset(File data) throws Exception {
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data), "UTF-8"));
 	    fl = Utils.rnint(br);
 	    flnum = Utils.rnint(br);
 	    flavprob = Utils.rnint(br);
@@ -556,7 +599,7 @@ public class Resource
 	    flv = new int[flnum];
 	    flw = new int[flnum];
 	    size = 5;
-	    for(int j = 0;j<flnum;j++){
+	    for (int j = 0; j < flnum; j++) {
 		fln[j] = Utils.rnstr(br);
 		size += Utils.byte_strd(fln[j]).length;
 		flv[j] = Utils.rnint(br);
@@ -567,84 +610,106 @@ public class Resource
 	}
 
 	public int size() {
-	    return(size);
+	    return (size);
 	}
-	public int type() { return TILESET; }
-	public void decode(String res,int i) throws Exception {
-	    File f = new File(res+"//tileset//tileset_"+i+".data");
-	    new File(res+"//tileset//").mkdirs();
+
+	public int type() {
+	    return TILESET;
+	}
+
+	public void decode(String res, int i) throws Exception {
+	    File f = new File(res + "//tileset//tileset_" + i + ".data");
+	    new File(res + "//tileset//").mkdirs();
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
-	    bw.write("#TILESET LAYER FOR RES "+ res+ END);
-	    bw.write("#Byte fl"+END);
-	    bw.write(Integer.toString(fl)+END);
-	    bw.write("#uint16 flnum"+END);
-	    bw.write(Integer.toString(flnum)+END);
-	    bw.write("#uint16 flavprob"+END);
-	    bw.write(Integer.toString(flavprob)+END);
-	    for(int j = 0;j<flnum;j++){
-		bw.write("#String fln["+j+"]"+END);
-		bw.write(fln[j].replace("\n","\\n")+END);
-		bw.write("#uint16d flv["+j+"]"+END);
-		bw.write(Integer.toString(flv[j])+END);
-		bw.write("#byte flw["+j+"]"+END);
-		bw.write(Integer.toString(flw[j])+END);
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
+	    bw.write("#TILESET LAYER FOR RES " + res + END);
+	    bw.write("#Byte fl" + END);
+	    bw.write(Integer.toString(fl) + END);
+	    bw.write("#uint16 flnum" + END);
+	    bw.write(Integer.toString(flnum) + END);
+	    bw.write("#uint16 flavprob" + END);
+	    bw.write(Integer.toString(flavprob) + END);
+	    for (int j = 0; j < flnum; j++) {
+		bw.write("#String fln[" + j + "]" + END);
+		bw.write(fln[j].replace("\n", "\\n") + END);
+		bw.write("#uint16d flv[" + j + "]" + END);
+		bw.write(Integer.toString(flv[j]) + END);
+		bw.write("#byte flw[" + j + "]" + END);
+		bw.write(Integer.toString(flw[j]) + END);
 	    }
 	    bw.flush();
 	    bw.close();
 	}
+
 	public void encode(OutputStream out) throws Exception {
-	    out.write(new byte[] { (byte)(fl & 0xFF) });
+	    out.write(new byte[] { (byte) (fl & 0xFF) });
 	    out.write(Utils.byte_int16d(flnum));
 	    out.write(Utils.byte_int16d(flavprob));
-	    for(int j = 0;j<flnum;++j){
+	    for (int j = 0; j < flnum; ++j) {
 		out.write(Utils.byte_strd(fln[j]));
 		out.write(Utils.byte_int16d(flv[j]));
-		out.write(new byte[] { (byte)(flw[j] & 0xFF) });
+		out.write(new byte[] { (byte) (flw[j] & 0xFF) });
 	    }
 	}
-	public void init() {}
-    }static{ltypes.put("tileset",Tileset.class);}
+
+	public void init() {
+	}
+    }
+
+    static {
+	ltypes.put("tileset", Tileset.class);
+    }
 
     public class Pagina extends Layer {
 	public final String text;
 	private int size = 0;
-		
+
 	public Pagina(byte[] buf) {
 	    try {
 		text = new String(buf, "UTF-8"); /* String */
-	    } catch(UnsupportedEncodingException e) {
-		throw(new LoadException(e, Resource.this));
+	    } catch (UnsupportedEncodingException e) {
+		throw (new LoadException(e, Resource.this));
 	    }
 	}
 
-	public Pagina(File data) throws Exception{
-	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
+	public Pagina(File data) throws Exception {
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data), "UTF-8"));
 	    text = Utils.rnstr(br);
 	    size = Utils.byte_strd(text).length;
 	    br.close();
 	}
 
 	public int size() {
-	    return(size);
+	    return (size);
 	}
-	public int type() { return PAGINA; }		
-	public void decode(String res,int i) throws Exception {
-	    File f = new File(res+"//pagina//pagina_"+i+".data");
-	    new File(res+"//pagina//").mkdirs();
+
+	public int type() {
+	    return PAGINA;
+	}
+
+	public void decode(String res, int i) throws Exception {
+	    File f = new File(res + "//pagina//pagina_" + i + ".data");
+	    new File(res + "//pagina//").mkdirs();
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
-	    bw.write("#PAGINA LAYER FOR RES "+res+END);
-	    bw.write("#String text"+END);
-	    bw.write(text.replace("\n","\\n")+END);
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
+	    bw.write("#PAGINA LAYER FOR RES " + res + END);
+	    bw.write("#String text" + END);
+	    bw.write(text.replace("\n", "\\n") + END);
 	    bw.flush();
 	    bw.close();
 	}
+
 	public void encode(OutputStream out) throws Exception {
 	    out.write(Utils.byte_strd(text));
 	}
-	public void init() {}
-    }static{ltypes.put("pagina",Pagina.class);}
+
+	public void init() {
+	}
+    }
+
+    static {
+	ltypes.put("pagina", Pagina.class);
+    }
 
     public class AButton extends Layer {
 	public final String name;
@@ -655,7 +720,7 @@ public class Resource
 	int pver;
 	String pr;
 	int size = 0;
-		
+
 	public AButton(byte[] buf) {
 	    int[] off = new int[1];
 	    off[0] = 0;
@@ -664,16 +729,16 @@ public class Resource
 	    off[0] += 2;
 	    name = Utils.strd(buf, off); /* String */
 	    preq = Utils.strd(buf, off); /* String Prerequisite skill */
-	    hk = (char)Utils.uint16d(buf, off[0]); /* 2 Bytes*/
+	    hk = (char) Utils.uint16d(buf, off[0]); /* 2 Bytes */
 	    off[0] += 2;
-	    ad = new String[adl=Utils.uint16d(buf, off[0])]; /*2 Bytes*/
+	    ad = new String[adl = Utils.uint16d(buf, off[0])]; /* 2 Bytes */
 	    off[0] += 2;
-	    for(int i = 0; i < ad.length; i++)
+	    for (int i = 0; i < ad.length; i++)
 		ad[i] = Utils.strd(buf, off); /* String */
 	}
 
-	public AButton(File data) throws Exception{
-	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
+	public AButton(File data) throws Exception {
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data), "UTF-8"));
 	    pr = Utils.rnstr(br);
 	    size = Utils.byte_strd(pr).length;
 	    pver = Utils.rnint(br);
@@ -683,42 +748,47 @@ public class Resource
 	    size += Utils.byte_strd(preq).length;
 	    hk = (char) Utils.rnint(br);
 	    ad = new String[Utils.rnint(br)];
-	    for(int j = 0;j<ad.length;++j){
+	    for (int j = 0; j < ad.length; ++j) {
 		ad[j] = Utils.rnstr(br);
 		size += Utils.byte_strd(ad[j]).length;
 	    }
 	    br.close();
 	}
-	
+
 	public int size() {
-	    return(size + 6);
+	    return (size + 6);
 	}
-	public int type() { return ABUTTON; }
-	public void decode(String res,int i) throws Exception {
-	    File f = new File(res+"//action//action_"+i+".data");
-	    new File(res+"//action//").mkdirs();
+
+	public int type() {
+	    return ABUTTON;
+	}
+
+	public void decode(String res, int i) throws Exception {
+	    File f = new File(res + "//action//action_" + i + ".data");
+	    new File(res + "//action//").mkdirs();
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
-	    bw.write("#ABUTTON LAYER FOR RES "+res+END);
-	    bw.write("#String pr"+END);
-	    bw.write(pr.replace("\n","\\n")+END);
-	    bw.write("#uint16 pver"+END);
-	    bw.write(Integer.toString(pver)+END);
-	    bw.write("#String name"+END);
-	    bw.write(name.replace("\n","\\n")+END);
-	    bw.write("#String preq"+END);
-	    bw.write(preq.replace("\n","\\n")+END);
-	    bw.write("#uint16 hk"+END);
-	    bw.write(Integer.toString((int)hk)+END);
-	    bw.write("#uint16 ad length"+END);
-	    bw.write(Integer.toString(adl)+END);
-	    for(int j =0;j<adl;++j){
-		bw.write("#String ad["+j+"]"+END);
-		bw.write(ad[j].replace("\n","\\n")+END);
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
+	    bw.write("#ABUTTON LAYER FOR RES " + res + END);
+	    bw.write("#String pr" + END);
+	    bw.write(pr.replace("\n", "\\n") + END);
+	    bw.write("#uint16 pver" + END);
+	    bw.write(Integer.toString(pver) + END);
+	    bw.write("#String name" + END);
+	    bw.write(name.replace("\n", "\\n") + END);
+	    bw.write("#String preq" + END);
+	    bw.write(preq.replace("\n", "\\n") + END);
+	    bw.write("#uint16 hk" + END);
+	    bw.write(Integer.toString((int) hk) + END);
+	    bw.write("#uint16 ad length" + END);
+	    bw.write(Integer.toString(adl) + END);
+	    for (int j = 0; j < adl; ++j) {
+		bw.write("#String ad[" + j + "]" + END);
+		bw.write(ad[j].replace("\n", "\\n") + END);
 	    }
 	    bw.flush();
 	    bw.close();
 	}
+
 	public void encode(OutputStream out) throws Exception {
 	    out.write(Utils.byte_strd(pr));
 	    out.write(Utils.byte_int16d(pver));
@@ -726,12 +796,17 @@ public class Resource
 	    out.write(Utils.byte_strd(preq));
 	    out.write(Utils.byte_int16d(hk));
 	    out.write(Utils.byte_int16d(ad.length));
-	    for(int j = 0;j<ad.length;++j)
+	    for (int j = 0; j < ad.length; ++j)
 		out.write(Utils.byte_strd(ad[j]));
 	}
-	public void init() {}
-    }static {ltypes.put("action", AButton.class);}
 
+	public void init() {
+	}
+    }
+
+    static {
+	ltypes.put("action", AButton.class);
+    }
 
     public class Code extends Layer {
 	public final String name;
@@ -746,11 +821,11 @@ public class Resource
 	    System.arraycopy(buf, off[0], data, 0, data.length);
 	}
 
-	public Code(File dat,File clas) throws Exception{
-	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(dat),"UTF-8"));
+	public Code(File dat, File clas) throws Exception {
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(dat), "UTF-8"));
 	    name = Utils.rnstr(br);
 	    size = Utils.byte_strd(name).length;
-	    data = new byte[(int)clas.length()];
+	    data = new byte[(int) clas.length()];
 	    FileInputStream fis = new FileInputStream(clas);
 	    fis.read(data);
 	    fis.close();
@@ -758,51 +833,63 @@ public class Resource
 	}
 
 	public int size() {
-	    return(size + data.length);
+	    return (size + data.length);
 	}
-	public int type() { return CODE; }		
-	public void decode(String res,int i) throws Exception {
-	    File f = new File(res+"//code//code_"+i+".data");
-	    new File(res+"//code//").mkdirs();
+
+	public int type() {
+	    return CODE;
+	}
+
+	public void decode(String res, int i) throws Exception {
+	    File f = new File(res + "//code//code_" + i + ".data");
+	    new File(res + "//code//").mkdirs();
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
-	    bw.write("#CODE LAYER FOR RES "+res+END);
-	    bw.write("#String class_name"+END);
-	    bw.write("#Note: the .class file will have the same name as this file"+END);
-	    bw.write(name.replace("\n","\\n")+END);
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
+	    bw.write("#CODE LAYER FOR RES " + res + END);
+	    bw.write("#String class_name" + END);
+	    bw.write("#Note: the .class file will have the same name as this file" + END);
+	    bw.write(name.replace("\n", "\\n") + END);
 	    bw.flush();
 	    bw.close();
-	    f = new File(res+"//code//code_"+i+".class");
+	    f = new File(res + "//code//code_" + i + ".class");
 	    FileOutputStream fout = new FileOutputStream(f);
 	    fout.write(data);
 	    fout.flush();
 	    fout.close();
 	}
+
 	public void encode(OutputStream out) throws Exception {
 	    out.write(Utils.byte_strd(name));
 	    out.write(data);
 	}
-	public void init() {}
-    }static {ltypes.put("code", Code.class);}
+
+	public void init() {
+	}
+    }
+
+    static {
+	ltypes.put("code", Code.class);
+    }
 
     public class CodeEntry extends Layer {
 	private int size = 0;
 	private ArrayList<String> p = new ArrayList<String>();
 	private ArrayList<String> e = new ArrayList<String>();
+
 	public CodeEntry(byte[] buf) {
 	    int[] off = new int[1];
 	    off[0] = 0;
-	    while(off[0] < buf.length) {
-		p.add(Utils.strd(buf,off));/* String */
-		e.add(Utils.strd(buf,off));/* String */
+	    while (off[0] < buf.length) {
+		p.add(Utils.strd(buf, off));/* String */
+		e.add(Utils.strd(buf, off));/* String */
 	    }
 	}
 
-	public CodeEntry(File data) throws Exception{
-	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data),"UTF-8"));
+	public CodeEntry(File data) throws Exception {
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data), "UTF-8"));
 	    String t;
 	    int s = Utils.rnint(br);
-	    for(int j = 0;j<s;++j){
+	    for (int j = 0; j < s; ++j) {
 		t = Utils.rnstr(br);
 		p.add(t);
 		size += Utils.byte_strd(t).length;
@@ -814,110 +901,140 @@ public class Resource
 	}
 
 	public int size() {
-	    return(size);
+	    return (size);
 	}
-	public int type() { return CODEENTRY; }
-	public void decode(String res,int i) throws Exception {
-	    File f = new File(res+"//codeentry//codeentry_"+i+".data");
-	    new File(res+"//codeentry//").mkdirs();
+
+	public int type() {
+	    return CODEENTRY;
+	}
+
+	public void decode(String res, int i) throws Exception {
+	    File f = new File(res + "//codeentry//codeentry_" + i + ".data");
+	    new File(res + "//codeentry//").mkdirs();
 	    f.createNewFile();
-	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
-	    bw.write("#CODEENTRY LAYER FOR RES "+res+END);
-	    bw.write("#int32 length"+END);
-	    bw.write(p.size()+END);
-	    for(int j = 0;j<p.size();++j){
-		bw.write("#String key["+j+"]"+END);
-		bw.write(p.get(j).replace("\n","\\n")+END);
-		bw.write("#String value["+j+"]"+END);
-		bw.write(e.get(j).replace("\n","\\n")+END);
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
+	    bw.write("#CODEENTRY LAYER FOR RES " + res + END);
+	    bw.write("#int32 length" + END);
+	    bw.write(p.size() + END);
+	    for (int j = 0; j < p.size(); ++j) {
+		bw.write("#String key[" + j + "]" + END);
+		bw.write(p.get(j).replace("\n", "\\n") + END);
+		bw.write("#String value[" + j + "]" + END);
+		bw.write(e.get(j).replace("\n", "\\n") + END);
 	    }
 	    bw.flush();
 	    bw.close();
 	}
+
 	public void encode(OutputStream out) throws Exception {
-	    for(int i = 0;i<p.size();++i){
+	    for (int i = 0; i < p.size(); ++i) {
 		out.write(Utils.byte_strd(p.get(i)));
 		out.write(Utils.byte_strd(e.get(i)));
 	    }
 	}
-	public void init() {}
-    } static {ltypes.put("codeentry", CodeEntry.class);}
+
+	public void init() {
+	}
+    }
+
+    static {
+	ltypes.put("codeentry", CodeEntry.class);
+    }
 
     public class Audio extends Layer {
-	//transient public byte[] clip;
+	// transient public byte[] clip;
 	byte[] raw;
-	    
+
 	public Audio(byte[] buf) {
 	    raw = new byte[buf.length];
-	    for(int i = 0;i<buf.length;++i){
+	    for (int i = 0; i < buf.length; ++i) {
 		raw[i] = buf[i];
 	    }
 	}
 
-	public Audio(File ogg) throws Exception{
+	public Audio(File ogg) throws Exception {
 	    FileInputStream fis = new FileInputStream(ogg);
-	    raw = new byte[(int)ogg.length()];
+	    raw = new byte[(int) ogg.length()];
 	    fis.read(raw);
 	    fis.close();
 	}
 
-	public int size() { return(raw.length); } 
-	public int type() { return AUDIO; }
-	public void decode(String res,int i) throws Exception {
-	    File f= new File(res+"//audio//audio_"+i+".ogg");
-	    new File(res+"//audio//").mkdirs();	    
+	public int size() {
+	    return (raw.length);
+	}
+
+	public int type() {
+	    return AUDIO;
+	}
+
+	public void decode(String res, int i) throws Exception {
+	    File f = new File(res + "//audio//audio_" + i + ".ogg");
+	    new File(res + "//audio//").mkdirs();
 	    f.createNewFile();
 	    FileOutputStream fout = new FileOutputStream(f);
 	    fout.write(raw);
 	    fout.flush();
 	    fout.close();
 	}
+
 	public void encode(OutputStream out) throws Exception {
 	    out.write(raw);
 	}
-	public void init() {}
-    }static {ltypes.put("audio", Audio.class);}
+
+	public void init() {
+	}
+    }
+
+    static {
+	ltypes.put("audio", Audio.class);
+    }
 
     public class Music extends Resource.Layer {
-	//transient javax.sound.midi.Sequence seq;
+	// transient javax.sound.midi.Sequence seq;
 	byte[] raw;
 
 	public Music(byte[] buf) {
-		raw = new byte[buf.length];
-		for(int i = 0;i<buf.length;++i){
-		    raw[i] = buf[i];
-		}
+	    raw = new byte[buf.length];
+	    for (int i = 0; i < buf.length; ++i) {
+		raw[i] = buf[i];
+	    }
 	}
 
-	public Music(File midi) throws Exception{
+	public Music(File midi) throws Exception {
 	    FileInputStream fis = new FileInputStream(midi);
-	    raw = new byte[(int)midi.length()];
+	    raw = new byte[(int) midi.length()];
 	    fis.read(raw);
 	    fis.close();
 	}
 
 	public int size() { return(raw.length); }
 	public int type() { return MUSIC; }
-	public void decode(String res,int i) throws Exception {
+	public void decode(String res, int i) throws Exception {
 	    File f= new File(res+"//midi//midi_"+i+".midi"); /* what file type is this idk? */
-	    new File(res+"//midi//").mkdirs();
+	    new File(res + "//midi//").mkdirs();
 	    f.createNewFile();
 	    FileOutputStream fout = new FileOutputStream(f);
 	    fout.write(raw);
 	    fout.flush();
 	    fout.close();
 	}
+
 	public void encode(OutputStream out) throws Exception {
 	    out.write(raw);
-	}	
-	public void init() {}
-    }
-    static {ltypes.put("midi", Music.class);}
+	}
 
-    public Resource(String full,String name,String out,boolean w) throws Exception {
+	public void init() {
+	}
+    }
+
+    static {
+	ltypes.put("midi", Music.class);
+    }
+
+    public Resource(String full, String name, String out, boolean w) throws Exception {
 	this.out = out;
 	this.name = name;
-	if(w){
+	if (w) {
 	    /* should be in .res format */
 	    load(new FileInputStream(new File(full)));
 	} else {
@@ -925,203 +1042,191 @@ public class Resource
 	    loadfromdecode(full);
 	}
     }
-    
-    public Resource(String full,String name,boolean w) throws Exception{
-	this(full,name,OUT,w);
+
+    public Resource(String full, String name, boolean w) throws Exception {
+	this(full, name, OUT, w);
     }
 
     private void readall(InputStream in, byte[] buf) throws IOException {
 	int ret, off = 0;
-	while(off < buf.length) {
+	while (off < buf.length) {
 	    ret = in.read(buf, off, buf.length - off);
-	    if(ret < 0)
-		throw(new LoadException("Incomplete resource at " + name, this));
+	    if (ret < 0) throw (new LoadException("Incomplete resource at " + name, this));
 	    off += ret;
 	}
     }
-    
-    private void load(InputStream in) throws Exception{
+
+    private void load(InputStream in) throws Exception {
 	byte buf[] = new byte[SIG.length()];
-	readall(in,buf);/* String */
-	if(!SIG.equals(new String(buf)))
-	    throw(new LoadException("Invalid res signature",this));
+	readall(in, buf);/* String */
+	if (!SIG.equals(new String(buf))) throw (new LoadException("Invalid res signature", this));
 	buf = new byte[2];
-	readall(in,buf);
-	ver = Utils.uint16d(buf,0); /* 2 bytes */
+	readall(in, buf);
+	ver = Utils.uint16d(buf, 0); /* 2 bytes */
 	List<Layer> layers = new LinkedList<Layer>();
-	outer: while(true){
+	outer: while (true) {
 	    StringBuilder tbuf = new StringBuilder();
-	    while(true){ /* load in layer type */
+	    while (true) { /* load in layer type */
 		byte bb;
 		int ib;
-		if((ib = in.read()) == -1){ /* 1 byte */
-		    if(tbuf.length() == 0)
-			break outer;
-		    throw(new LoadException("Incomplete resource at " + name,this));
+		if ((ib = in.read()) == -1) { /* 1 byte */
+		    if (tbuf.length() == 0) break outer;
+		    throw (new LoadException("Incomplete resource at " + name, this));
 		}
-		bb = (byte)ib;
-		if(bb == 0) break;
-		tbuf.append((char)bb);
+		bb = (byte) ib;
+		if (bb == 0) break;
+		tbuf.append((char) bb);
 	    }
-	    
+
 	    /* get length of layer */
 	    buf = new byte[4];
-	    readall(in,buf);
-	    int len = Utils.int32d(buf,0); /* 4 bytes */
+	    readall(in, buf);
+	    int len = Utils.int32d(buf, 0); /* 4 bytes */
 	    /* read in rest of data and init layer */
 	    buf = new byte[len];
-	    readall(in,buf);
+	    readall(in, buf);
 	    Class<? extends Layer> lc = ltypes.get(tbuf.toString());
-	    if(lc == null)
-		continue;
+	    if (lc == null) continue;
 	    Constructor<? extends Layer> cons;
 	    try {
 		cons = lc.getConstructor(Resource.class, byte[].class);
-	    } catch(NoSuchMethodException e) {
-		throw(new LoadException(e, Resource.this));
+	    } catch (NoSuchMethodException e) {
+		throw (new LoadException(e, Resource.this));
 	    }
 	    Layer l;
 	    try {
 		l = cons.newInstance(this, buf);
-	    } catch(InstantiationException e) {
-		throw(new LoadException(e, Resource.this));
-	    } catch(InvocationTargetException e) {
+	    } catch (InstantiationException e) {
+		throw (new LoadException(e, Resource.this));
+	    } catch (InvocationTargetException e) {
 		Throwable c = e.getCause();
-		if(c instanceof RuntimeException) 
-		    throw((RuntimeException)c);
+		if (c instanceof RuntimeException)
+		    throw ((RuntimeException) c);
 		else
-		    throw(new LoadException(c, Resource.this));
-	    } catch(IllegalAccessException e) {
-		throw(new LoadException(e, Resource.this));
+		    throw (new LoadException(c, Resource.this));
+	    } catch (IllegalAccessException e) {
+		throw (new LoadException(e, Resource.this));
 	    }
 	    layers.add(l);
 	}
 
 	this.layers = layers;
-	for(Layer l : layers)
+	for (Layer l : layers)
 	    l.init();
     }
 
-    public void decodeall() throws Exception{
+    public void decodeall() throws Exception {
 	final String base = out + name;
 	new File(base).mkdirs();
 	int c[] = new int[12];
 	{
-	    for(int i=0;i<12;++i)
+	    for (int i = 0; i < 12; ++i)
 		c[i] = 0;
 	}
-	for(Layer l: layers){ 
-	    l.decode(base,c[l.type()]++);
+	for (Layer l : layers) {
+	    l.decode(base, c[l.type()]++);
 	}
-	BufferedWriter bw = new BufferedWriter(new FileWriter(base+"//meta"));
+	BufferedWriter bw = new BufferedWriter(new FileWriter(base + "//meta"));
 	bw.write("#General info for res " + base + END);
-	bw.write("#int16 ver"+END);
-	bw.write(Integer.toString(ver)+END);	
-	bw.write("#int16 skip [1=skip;0=noskip]"+END);
-	bw.write(skip_value+END);
+	bw.write("#int16 ver" + END);
+	bw.write(Integer.toString(ver) + END);
 	bw.flush();
 	bw.close();
     }
 
-    private void loadfromdecode(String full) throws Exception
-    {
-	if(!full.endsWith(".res"))
-	    throw(new Exception("Invalid decoded res directory"));
+    private void loadfromdecode(String full) throws Exception {
+	if (!full.endsWith(".res")) throw (new Exception("Invalid decoded res directory"));
 	File f = new File(full);
-	if(!f.isDirectory())
-	    throw(new Exception("Invalid decoded res directory"));
+	if (!f.isDirectory()) throw (new Exception("Invalid decoded res directory"));
 	File l[] = f.listFiles();
 	File df[];
 	String n;
-	int i,j;
+	int i, j;
 	List<Layer> layers = new LinkedList<Layer>();
-	for(i=0;i<l.length;++i){
-	    if(l[i].isDirectory()){
+	for (i = 0; i < l.length; ++i) {
+	    if (l[i].isDirectory()) {
 		n = l[i].getName();
 		Class<? extends Layer> lc = ltypes.get(n);
-		if(lc == null)
-		    continue;
+		if (lc == null) continue;
 		Constructor<? extends Layer> cons;
 
 		df = l[i].listFiles();
-		switch(n){
-		case "image":
-		case "tile":{ /* .data + .png */
-		    if(df.length % 2 != 0)
-			throw(new Exception("Invalid number of decoded files for "+n));
-		    try {
-			cons = lc.getConstructor(Resource.class, File.class, File.class);
-		    } catch(NoSuchMethodException e) {
-			throw(new LoadException(e, Resource.this));
-		    }  
-		    for(j=0;j<df.length-1;++j){
-			if(df[j].getName().endsWith(".data") ||
-			   df[j+1].getName().endsWith(".png"))
-			    layers.add(cons.newInstance(this,df[j++],df[j]));
+		switch (n) {
+		    case "image":
+		    case "tile": { /* .data + .png */
+			if (df.length % 2 != 0) throw (new Exception("Invalid number of decoded files for " + n));
+			try {
+			    cons = lc.getConstructor(Resource.class, File.class, File.class);
+			} catch (NoSuchMethodException e) {
+			    throw (new LoadException(e, Resource.this));
+			}
+			for (j = 0; j < df.length - 1; ++j) {
+			    if (df[j].getName().endsWith(".data") || df[j + 1].getName().endsWith(".png"))
+				layers.add(cons.newInstance(this, df[j++], df[j]));
+			}
 		    }
-		} break;
-		case "code":{ /* .data + .class */
-		    if(df.length %2 != 0)
-			throw(new Exception("Invalid number of decoded files for "+n));
-		    try{
-			cons = lc.getConstructor(Resource.class, File.class, File.class);
-		    } catch(NoSuchMethodException e){
-			throw(new LoadException(e,Resource.this));
+			break;
+		    case "code": { /* .data + .class */
+			if (df.length % 2 != 0) throw (new Exception("Invalid number of decoded files for " + n));
+			try {
+			    cons = lc.getConstructor(Resource.class, File.class, File.class);
+			} catch (NoSuchMethodException e) {
+			    throw (new LoadException(e, Resource.this));
+			}
+			for (j = 0; j < df.length - 1; j += 2) {
+			    if (df[j].getName().endsWith(".data") || df[j].getName().endsWith(".class"))
+				layers.add(cons.newInstance(this, df[j + 1], df[j]));
+			}
 		    }
-		    for(j=0;j<df.length-1;j+=2){
-			if(df[j].getName().endsWith(".data") ||
-			   df[j].getName().endsWith(".class"))
-			    layers.add(cons.newInstance(this,df[j+1],df[j]));
+			break;
+		    case "neg":
+		    case "anim":
+		    case "tooltip":
+		    case "tileset":
+		    case "codeentry":
+		    case "pagina":
+		    case "action": { /* .data */
+			try {
+			    cons = lc.getConstructor(Resource.class, File.class);
+			} catch (NoSuchMethodException e) {
+			    throw (new LoadException(e, Resource.this));
+			}
+			for (j = 0; j < df.length; ++j)
+			    if (df[j].getName().endsWith(".data")) layers.add(cons.newInstance(this, df[j]));
 		    }
-		}break;
-		case "neg":
-		case "anim":
-		case "tooltip":
-		case "tileset":
-		case "codeentry":
-		case "pagina":
-		case "action":{ /* .data */
-		    try {
-			cons = lc.getConstructor(Resource.class, File.class);
-		    } catch(NoSuchMethodException e) {
-			throw(new LoadException(e, Resource.this));
+			break;
+		    case "midi": { /* .music */
+			try {
+			    cons = lc.getConstructor(Resource.class, File.class);
+			} catch (NoSuchMethodException e) {
+			    throw (new LoadException(e, Resource.this));
+			}
+			for (j = 0; j < df.length; ++j)
+			    if (df[j].getName().endsWith(".midi")) layers.add(cons.newInstance(this, df[j]));
 		    }
-		    for(j=0;j<df.length;++j)
-			if(df[j].getName().endsWith(".data"))
-			    layers.add(cons.newInstance(this,df[j]));
-		}break;
-		case "midi":{ /* .music */
-		    try {
-			cons = lc.getConstructor(Resource.class, File.class);
-		    } catch(NoSuchMethodException e) {
-			throw(new LoadException(e, Resource.this));
+			break;
+		    case "audio": { /* .ogg */
+			try {
+			    cons = lc.getConstructor(Resource.class, File.class);
+			} catch (NoSuchMethodException e) {
+			    throw (new LoadException(e, Resource.this));
+			}
+			for (j = 0; j < df.length; ++j)
+			    if (df[j].getName().endsWith(".ogg")) layers.add(cons.newInstance(this, df[j]));
 		    }
-		    for(j=0;j<df.length;++j)
-			if(df[j].getName().endsWith(".midi"))
-			    layers.add(cons.newInstance(this,df[j]));
-		}break;
-		case "audio":{ /* .ogg */
-		    try {
-			cons = lc.getConstructor(Resource.class, File.class);
-		    } catch(NoSuchMethodException e) {
-			throw(new LoadException(e, Resource.this));
-		    }
-		    for(j=0;j<df.length;++j)
-			if(df[j].getName().endsWith(".ogg"))
-			    layers.add(cons.newInstance(this,df[j]));
-		}break;
+			break;
 		}
 	    }
 	}
 	this.layers = layers;
 
-	BufferedReader br = new BufferedReader(new FileReader(full+"//meta"));
+	BufferedReader br = new BufferedReader(new FileReader(full + "//meta"));
 	ver = Utils.rnint(br);
 	br.close();
     }
 
-    public void encodeall() throws Exception{
-	File f = new File(out+name);
+    public void encodeall() throws Exception {
+	File f = new File(out + name);
 	f.mkdirs();
 	f.delete();
 	f.createNewFile();
@@ -1130,8 +1235,8 @@ public class Resource
 	fos.write(buf);/* 1 String */
 	buf = Utils.byte_int16d(ver);
 	fos.write(buf);/* 2 Bytes */
-	
-	for(Layer l : layers){
+
+	for (Layer l : layers) {
 	    fos.write(TBUF[l.type()]); /* Layer id */
 	    fos.write(Utils.byte_int32d(l.size())); /* 4 bytes */
 	    l.encode(fos); /* l.size() bytes */
