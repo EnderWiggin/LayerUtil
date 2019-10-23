@@ -1,7 +1,7 @@
 /*
  *  This file is part of the Haven & Hearth game client.
  *  Copyright (C) 2009 Fredrik Tolf <fredrik@dolda2000.com>, and
- *                     Björn Johannessen <johannessen.bjorn@gmail.com>
+ *                     Bjï¿½rn Johannessen <johannessen.bjorn@gmail.com>
  *
  *  Redistribution and/or modification of this file is subject to the
  *  terms of the GNU Lesser General Public License, version 3, as
@@ -880,8 +880,25 @@ public class Resource {
 	    int[] off = new int[1];
 	    off[0] = 0;
 	    while (off[0] < buf.length) {
-		p.add(Utils.strd(buf, off));/* String */
-		e.add(Utils.strd(buf, off));/* String */
+		int t = buf[off[0]++];
+		if(t == 1) {
+		    while(true) {
+			String ps = Utils.strd(buf, off);
+			String es = Utils.strd(buf, off);
+			if(ps.length() == 0)
+			    break;
+			p.add(ps);/* String */
+			e.add(es);/* String */
+		    }
+		} else if(t == 2) {
+		    while(true) {
+			String ln = Utils.strd(buf, off);
+			if(ln.length() == 0)
+			    break;
+			int ver = Utils.uint16d(buf, off[0]); off[0] += 2;
+			//classpath.add(Resource.load(ln, ver));
+		    }
+		}
 	    }
 	}
 

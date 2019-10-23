@@ -128,15 +128,15 @@ public class Utils {
 	buf[off + 1] = sb((num & 0xff00) >> 8);
     }
 
-	
-    static String strd(byte[] buf, int[] off) {
+
+    public static String strd(byte[] buf, int[] off) {
 	int i;
 	for(i = off[0]; buf[i] != 0; i++);
 	String ret;
 	try {
 	    ret = new String(buf, off[0], i - off[0], "utf-8");
 	} catch(UnsupportedEncodingException e) {
-	    throw(new RuntimeException(e));
+	    throw(new IllegalArgumentException(e));
 	}
 	off[0] = i + 1;
 	return(ret);
