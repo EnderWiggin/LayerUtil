@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="LayerUtil:jar">
+    <output-path>$PROJECT_DIR$/build</output-path>
+    <root id="archive" name="LayerUtil.jar">
+      <element id="module-output" name="LayerUtil" />
+      <element id="library" level="module" name="JRE_LIB" module-name="LayerUtil" />
+    </root>
+  </artifact>
+</component>
