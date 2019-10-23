@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="LayerUtil" type="JarApplication">
+    <option name="JAR_PATH" value="$PROJECT_DIR$/build/LayerUtil.jar" />
+    <option name="PROGRAM_PARAMETERS" value="-rd qqq www" />
+    <option name="WORKING_DIRECTORY" value="C:\Ender\workspace\LayerUtil\build" />
+    <option name="ALTERNATIVE_JRE_PATH" />
+    <method v="2">
+      <option name="BuildArtifacts" enabled="true">
+        <artifact name="LayerUtil:jar" />
+      </option>
+    </method>
+  </configuration>
+</component>
