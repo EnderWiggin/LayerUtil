@@ -825,10 +825,12 @@ public class Resource {
 	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(dat), "UTF-8"));
 	    name = Utils.rnstr(br);
 	    size = Utils.byte_strd(name).length;
-	    data = new byte[(int) clas.length()];
-	    FileInputStream fis = new FileInputStream(clas);
-	    fis.read(data);
-	    fis.close();
+	    byte[] tmp = Utils.readBytes(clas);
+	    if(!Utils.isJavaClass(tmp)) {
+		clas = new File(clas.getParentFile() + File.separator + new String(tmp));
+		tmp = Utils.readBytes(clas);
+	    }
+	    data = tmp;
 	    br.close();
 	}
 
@@ -1184,15 +1186,18 @@ public class Resource {
 		    }
 			break;
 		    case "code": { /* .data + .class */
-			if (df.length % 2 != 0) throw (new Exception("Invalid number of decoded files for " + n));
+			if(df.length % 2 != 0) throw (new Exception("Invalid number of decoded files for " + n));
 			try {
 			    cons = lc.getConstructor(Resource.class, File.class, File.class);
 			} catch (NoSuchMethodException e) {
 			    throw (new LoadException(e, Resource.this));
 			}
 			for (j = 0; j < df.length - 1; j += 2) {
-			    if (df[j].getName().endsWith(".data") || df[j].getName().endsWith(".class"))
+			    if(df[j].getName().endsWith(".data")) {
+				layers.add(cons.newInstance(this, df[j], df[j + 1]));
+			    } else if(df[j].getName().endsWith(".class")) {
 				layers.add(cons.newInstance(this, df[j + 1], df[j]));
+			    }
 			}
 		    }
 			break;

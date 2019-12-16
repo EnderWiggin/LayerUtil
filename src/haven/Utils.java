@@ -241,6 +241,22 @@ public class Utils {
 	return(n.replace("\\n","\n"));
     }
 
+    public static boolean isJavaClass(byte[] bytes) {
+	return bytes.length >= 4
+	    && bytes[0] == (byte) 0xCA
+	    && bytes[1] == (byte) 0xFE
+	    && bytes[2] == (byte) 0xBA
+	    && bytes[3] == (byte) 0xBE;
+    }
+    
+    public static byte[] readBytes(File file) throws IOException {
+	byte[] tmp = new byte[(int) file.length()];
+	FileInputStream fis = new FileInputStream(file);
+	fis.read(tmp);
+	fis.close();
+	return  tmp;
+    }
+
     public static int floordiv(int a, int b) {
 	if(a < 0)
 	    return(((a + 1) / b) - 1);
