@@ -1077,6 +1077,56 @@ public class Resource {
 	ltypes.put("midi", Music.class);
     }
 
+    public class Sources extends Resource.Layer {
+	byte[] raw;
+
+	public Sources(byte[] buf) {
+	    raw = new byte[buf.length];
+	    for (int i = 0; i < buf.length; ++i) {
+		raw[i] = buf[i];
+	    }
+	}
+
+	public Sources(File src) throws Exception {
+	    FileInputStream fis = new FileInputStream(src);
+	    raw = new byte[(int) src.length()];
+	    fis.read(raw);
+	    fis.close();
+	}
+
+	@Override
+	public void init() { }
+
+	@Override
+	public int size() { return raw.length; }
+
+	@Override
+	public int type() { return SOURCES; }
+
+	@Override
+	public byte[] type_buffer() { return new byte[]{115, 114, 99, 0}; }
+
+	@Override
+	public void decode(String res, int i) throws Exception {
+	    File f = new File(res + "/src/src_" + i + ".java");
+	    new File(res + "/src/").mkdirs();
+	    f.createNewFile();
+	    FileOutputStream fout = new FileOutputStream(f);
+	    fout.write(raw);
+	    fout.flush();
+	    fout.close();
+	}
+
+	@Override
+	public void encode(OutputStream out) throws Exception {
+	    out.write(raw);
+	}
+    }
+
+    static {
+	ltypes.put("src", Sources.class);
+    }
+
     public Resource(String full, String name, String out, boolean w) throws Exception {
 	this.out = out;
 	this.name = name;
@@ -1267,6 +1317,16 @@ public class Resource {
 			for (j = 0; j < df.length; ++j)
 			    if (df[j].getName().endsWith(".ogg")) layers.add(cons.newInstance(this, df[j]));
 		    }
+			break;
+		    case "src":  /* .java */
+			try {
+			    cons = lc.getConstructor(Resource.class, File.class);
+			} catch (NoSuchMethodException e) {
+			    throw (new LoadException(e, Resource.this));
+			}
+			for (j = 0; j < df.length; ++j)
+			    if(df[j].getName().endsWith(".java")) layers.add(cons.newInstance(this, df[j]));
+
 			break;
 		}
 	    }
