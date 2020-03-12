@@ -1080,7 +1080,7 @@ public class Resource {
     public Resource(String full, String name, String out, boolean w) throws Exception {
 	this.out = out;
 	this.name = name;
-	if (w) {
+	if(w) {
 	    /* should be in .res format */
 	    load(new FileInputStream(new File(full)));
 	} else {
@@ -1131,8 +1131,12 @@ public class Resource {
 	    /* read in rest of data and init layer */
 	    buf = new byte[len];
 	    readall(in, buf);
-	    Class<? extends Layer> lc = ltypes.get(tbuf.toString());
-	    if (lc == null) continue;
+	    String layerName = tbuf.toString();
+	    Class<? extends Layer> lc = ltypes.get(layerName);
+	    if(lc == null) {
+		System.out.println(String.format("Couldn't find  layer class for '%s'", layerName));
+		continue;
+	    }
 	    Constructor<? extends Layer> cons;
 	    try {
 		cons = lc.getConstructor(Resource.class, byte[].class);
