@@ -53,33 +53,20 @@ public class Resource {
     public static Class<Audio> audio = Audio.class;
     public static Class<Tooltip> tooltip = Tooltip.class;
 
-    static final byte[][] TBUF = {
-				{105,109,97,103,101,0},
-				{116,105,108,101,0},
-				{110,101,103,0},
-				{97,110,105,109,0},
-				{116,105,108,101,115,101,116,0},
-				{112,97,103,105,110,97,0},
-				{97,99,116,105,111,110,0},
-				{97,117,100,105,111,0},
-				{116,111,111,108,116,105,112,0},
-				{109,105,100,105,0},
-				{99,111,100,101,0},
-				{99,111,100,101,101,110,116,114,121,0}
-    };
-
-    static final int IMAGE = 0;
-    static final int TILE = 1;
-    static final int NEG = 2;
-    static final int ANIM = 3;
-    static final int TILESET = 4;
-    static final int PAGINA = 5;
-    static final int ABUTTON = 6;
-    static final int AUDIO = 7;
-    static final int TOOLTIP = 8;
-    static final int MUSIC = 9;
-    static final int CODE = 10;
-    static final int CODEENTRY = 11;
+    static int TYPES = 0;
+    static final int IMAGE = TYPES++;
+    static final int TILE = TYPES++;
+    static final int NEG = TYPES++;
+    static final int ANIM = TYPES++;
+    static final int TILESET = TYPES++;
+    static final int PAGINA = TYPES++;
+    static final int ABUTTON = TYPES++;
+    static final int AUDIO = TYPES++;
+    static final int TOOLTIP = TYPES++;
+    static final int MUSIC = TYPES++;
+    static final int CODE = TYPES++;
+    static final int CODEENTRY = TYPES++;
+    static final int SOURCES = TYPES++;
     /*
       IMAGE	=> .data + .png
       TILE	=> .data + .png
@@ -129,6 +116,8 @@ public class Resource {
 	public abstract int size();
 
 	public abstract int type();
+
+	public abstract byte[] type_buffer();
 
 	public abstract void decode(String r, int i) throws Exception;
 
@@ -184,6 +173,9 @@ public class Resource {
 	public int type() {
 	    return IMAGE;
 	}
+
+	@Override
+	public byte[] type_buffer() { return new byte[]{105, 109, 97, 103, 101, 0}; }
 
 	public void init() {
 	}
@@ -252,6 +244,9 @@ public class Resource {
 	    return TOOLTIP;
 	}
 
+	@Override
+	public byte[] type_buffer() { return new byte[]{116, 111, 111, 108, 116, 105, 112, 0}; }
+
 	public void init() {
 	}
 
@@ -319,6 +314,9 @@ public class Resource {
 	public int type() {
 	    return TILE;
 	}
+
+	@Override
+	public byte[] type_buffer() { return new byte[]{116, 105, 108, 101, 0}; }
 
 	public void decode(String res, int i) throws Exception {
 	    File f = new File(res + "/tile/tile_" + i + ".data");
@@ -424,6 +422,9 @@ public class Resource {
 	    return NEG;
 	}
 
+	@Override
+	public byte[] type_buffer() { return new byte[]{110, 101, 103, 0}; }
+
 	public void decode(String res, int i) throws Exception {
 	    File f = new File(res + "/neg/neg_" + i + ".data");
 	    new File(res + "/neg/").mkdirs();
@@ -525,6 +526,9 @@ public class Resource {
 	    return ANIM;
 	}
 
+	@Override
+	public byte[] type_buffer() { return new byte[]{97, 110, 105, 109, 0}; }
+
 	public void decode(String res, int i) throws Exception {
 	    File f = new File(res + "/anim/anim_" + i + ".data");
 	    new File(res + "/anim/").mkdirs();
@@ -617,6 +621,9 @@ public class Resource {
 	    return TILESET;
 	}
 
+	@Override
+	public byte[] type_buffer() { return new byte[]{116, 105, 108, 101, 115, 101, 116, 0}; }
+
 	public void decode(String res, int i) throws Exception {
 	    File f = new File(res + "/tileset/tileset_" + i + ".data");
 	    new File(res + "/tileset/").mkdirs();
@@ -686,6 +693,9 @@ public class Resource {
 	public int type() {
 	    return PAGINA;
 	}
+
+	@Override
+	public byte[] type_buffer() { return new byte[]{112, 97, 103, 105, 110, 97, 0}; }
 
 	public void decode(String res, int i) throws Exception {
 	    File f = new File(res + "/pagina/pagina_" + i + ".data");
@@ -762,6 +772,9 @@ public class Resource {
 	public int type() {
 	    return ABUTTON;
 	}
+
+	@Override
+	public byte[] type_buffer() { return new byte[]{97, 99, 116, 105, 111, 110, 0}; }
 
 	public void decode(String res, int i) throws Exception {
 	    File f = new File(res + "/action/action_" + i + ".data");
@@ -841,6 +854,9 @@ public class Resource {
 	public int type() {
 	    return CODE;
 	}
+
+	@Override
+	public byte[] type_buffer() { return new byte[]{99, 111, 100, 101, 0}; }
 
 	public void decode(String res, int i) throws Exception {
 	    File f = new File(res + "/code/code_" + i + ".data");
@@ -927,6 +943,9 @@ public class Resource {
 	    return CODEENTRY;
 	}
 
+	@Override
+	public byte[] type_buffer() { return new byte[]{99, 111, 100, 101, 101, 110, 116, 114, 121, 0}; }
+
 	public void decode(String res, int i) throws Exception {
 	    File f = new File(res + "/codeentry/codeentry_" + i + ".data");
 	    new File(res + "/codeentry/").mkdirs();
@@ -986,6 +1005,9 @@ public class Resource {
 	    return AUDIO;
 	}
 
+	@Override
+	public byte[] type_buffer() { return new byte[]{97, 117, 100, 105, 111, 0}; }
+
 	public void decode(String res, int i) throws Exception {
 	    File f = new File(res + "/audio/audio_" + i + ".ogg");
 	    new File(res + "/audio/").mkdirs();
@@ -1026,10 +1048,15 @@ public class Resource {
 	    fis.close();
 	}
 
-	public int size() { return(raw.length); }
+	public int size() { return (raw.length); }
+
 	public int type() { return MUSIC; }
+
+	@Override
+	public byte[] type_buffer() { return new byte[]{109, 105, 100, 105, 0}; }
+
 	public void decode(String res, int i) throws Exception {
-	    File f= new File(res+"/midi/midi_"+i+".midi"); /* what file type is this idk? */
+	    File f = new File(res + "/midi/midi_" + i + ".midi"); /* what file type is this idk? */
 	    new File(res + "/midi/").mkdirs();
 	    f.createNewFile();
 	    FileOutputStream fout = new FileOutputStream(f);
@@ -1137,9 +1164,9 @@ public class Resource {
     public void decodeall() throws Exception {
 	final String base = out + name;
 	new File(base).mkdirs();
-	int c[] = new int[12];
+	int c[] = new int[TYPES];
 	{
-	    for (int i = 0; i < 12; ++i)
+	    for (int i = 0; i < TYPES; ++i)
 		c[i] = 0;
 	}
 	for (Layer l : layers) {
@@ -1259,7 +1286,7 @@ public class Resource {
 	fos.write(buf);/* 2 Bytes */
 
 	for (Layer l : layers) {
-	    fos.write(TBUF[l.type()]); /* Layer id */
+	    fos.write(l.type_buffer()); /* Layer id */
 	    fos.write(Utils.byte_int32d(l.size())); /* 4 bytes */
 	    l.encode(fos); /* l.size() bytes */
 	}
