@@ -26,18 +26,10 @@
 
 package haven;
 
-import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.prefs.*;
-import java.util.*;
-import java.awt.Graphics;
-import java.awt.Color;
-import java.awt.Toolkit;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.image.BufferedImage;
+import java.util.Date;
 
 public class Utils {
 
@@ -87,6 +79,12 @@ public class Utils {
 		(byte)((value >> 8) & 0xff)
 	    });
     }
+
+    static byte[] byte_float32d(float value) {
+        byte[] buf = new byte[4];
+        float32e(value, buf, 0);
+	return(buf);
+    }
 	
     static long uint32d(byte[] buf, int off) {
 	return(ub(buf[off]) + (ub(buf[off + 1]) * 256) + (ub(buf[off + 2]) * 65536) + (ub(buf[off + 3]) * 16777216));
@@ -98,48 +96,233 @@ public class Utils {
 	buf[off + 2] = sb((int)((num & 0xff0000) >> 16));
 	buf[off + 3] = sb((int)((num & 0xff000000) >> 24));
     }
-	
+
     static int int32d(byte[] buf, int off) {
 	long u = uint32d(buf, off);
 	if(u > Integer.MAX_VALUE)
-	    return((int)((((long)Integer.MIN_VALUE) * 2) - u));
+	    return ((int) ((((long) Integer.MIN_VALUE) * 2) - u));
 	else
-	    return((int)u);
+	    return ((int) u);
     }
 
-    static byte[] byte_int32d(int value){
-	return(new byte[] {
-		(byte)(value & 0xff),
-		(byte)((value >> 8) & 0xff),
-		(byte)((value >> 16) & 0xff),
-		(byte)((value >> 24) & 0xff)
-	    });
+    public static long int64d(byte[] buf, int off) {
+	long b = 0;
+	for (int i = 0; i < 8; i++)
+	    b |= ((long) ub(buf[off + i])) << (i * 8);
+	return (b);
     }
-	
+
+    public static void int64e(long num, byte[] buf, int off) {
+	for (int i = 0; i < 8; i++) {
+	    buf[off++] = (byte) (num & 0xff);
+	    num >>>= 8;
+	}
+    }
+
+    static byte[] byte_int32d(int value) {
+	return (new byte[]{
+	    (byte) (value & 0xff),
+	    (byte) ((value >> 8) & 0xff),
+	    (byte) ((value >> 16) & 0xff),
+	    (byte) ((value >> 24) & 0xff)
+	});
+    }
+
     static void int32e(int num, byte[] buf, int off) {
 	if(num < 0)
-	    uint32e(0x100000000L + ((long)num), buf, off);
+	    uint32e(0x100000000L + ((long) num), buf, off);
 	else
 	    uint32e(num, buf, off);
     }
-	
+
     static void uint16e(int num, byte[] buf, int off) {
 	buf[off] = sb(num & 0xff);
 	buf[off + 1] = sb((num & 0xff00) >> 8);
     }
 
+    public static void int16e(short num, byte[] buf, int off) {
+	uint16e(((int) num) & 0xffff, buf, off);
+    }
+
+    public static double floatd(byte[] buf, int off) {
+	int e = buf[off];
+	long t = uint32d(buf, off + 1);
+	int m = (int) (t & 0x7fffffffL);
+	boolean s = (t & 0x80000000L) != 0;
+	if(e == -128) {
+	    if(m == 0)
+		return (0.0);
+	    throw (new RuntimeException("Invalid special float encoded (" + m + ")"));
+	}
+	double v = (((double) m) / 2147483648.0) + 1.0;
+	if(s)
+	    v = -v;
+	return (Math.pow(2.0, e) * v);
+    }
+
+    public static float float32d(byte[] buf, int off) {
+	return (Float.intBitsToFloat(int32d(buf, off)));
+    }
+
+    public static double float64d(byte[] buf, int off) {
+	return (Double.longBitsToDouble(int64d(buf, off)));
+    }
+
+    public static void float32e(float num, byte[] buf, int off) {
+	int32e(Float.floatToIntBits(num), buf, off);
+    }
+
+    public static void float64e(double num, byte[] buf, int off) {
+	int64e(Double.doubleToLongBits(num), buf, off);
+    }
+
+    public static void float9995d(int word, float[] ret) {
+	int xb = (word & 0x7f800000) >> 23, xs = ((word & 0x80000000) >> 31) & 1,
+	    yb = (word & 0x003fc000) >> 14, ys = ((word & 0x00400000) >> 22) & 1,
+	    zb = (word & 0x00001fe0) >> 5, zs = ((word & 0x00002000) >> 13) & 1;
+	int me = (word & 0x1f) - 15;
+	int xe = Integer.numberOfLeadingZeros(xb) - 24,
+	    ye = Integer.numberOfLeadingZeros(yb) - 24,
+	    ze = Integer.numberOfLeadingZeros(zb) - 24;
+	if(xe == 8) ret[0] = 0;
+	else ret[0] = Float.intBitsToFloat((xs << 31) | ((me - xe + 127) << 23) | ((xb << (xe + 16)) & 0x007fffff));
+	if(ye == 8) ret[1] = 0;
+	else ret[1] = Float.intBitsToFloat((ys << 31) | ((me - ye + 127) << 23) | ((yb << (ye + 16)) & 0x007fffff));
+	if(ze == 8) ret[2] = 0;
+	else ret[2] = Float.intBitsToFloat((zs << 31) | ((me - ze + 127) << 23) | ((zb << (ze + 16)) & 0x007fffff));
+    }
+
+    public static float hfdec(short bits) {
+	int b = ((int) bits) & 0xffff;
+	int e = (b & 0x7c00) >> 10;
+	int m = b & 0x03ff;
+	int ee;
+	if(e == 0) {
+	    if(m == 0) {
+		ee = 0;
+	    } else {
+		int n = Integer.numberOfLeadingZeros(m) - 22;
+		ee = (-15 - n) + 127;
+		m = (m << (n + 1)) & 0x03ff;
+	    }
+	} else if(e == 0x1f) {
+	    ee = 0xff;
+	} else {
+	    ee = e - 15 + 127;
+	}
+	int f32 = ((b & 0x8000) << 16) |
+	    (ee << 23) |
+	    (m << 13);
+	return (Float.intBitsToFloat(f32));
+    }
+
+    public static short hfenc(float f) {
+	int b = Float.floatToIntBits(f);
+	int e = (b & 0x7f800000) >> 23;
+	int m = b & 0x007fffff;
+	int ee;
+	if(e == 0) {
+	    ee = 0;
+	    m = 0;
+	} else if(e == 0xff) {
+	    ee = 0x1f;
+	} else if(e < 127 - 14) {
+	    ee = 0;
+	    m = (m | 0x00800000) >> ((127 - 14) - e);
+	} else if(e > 127 + 15) {
+	    return (((b & 0x80000000) == 0) ? ((short) 0x7c00) : ((short) 0xfc00));
+	} else {
+	    ee = e - 127 + 15;
+	}
+	int f16 = ((b >> 16) & 0x8000) |
+	    (ee << 10) |
+	    (m >> 13);
+	return ((short) f16);
+    }
+
+    public static float mfdec(byte bits) {
+	int b = ((int) bits) & 0xff;
+	int e = (b & 0x78) >> 3;
+	int m = b & 0x07;
+	int ee;
+	if(e == 0) {
+	    if(m == 0) {
+		ee = 0;
+	    } else {
+		int n = Integer.numberOfLeadingZeros(m) - 29;
+		ee = (-7 - n) + 127;
+		m = (m << (n + 1)) & 0x07;
+	    }
+	} else if(e == 0x0f) {
+	    ee = 0xff;
+	} else {
+	    ee = e - 7 + 127;
+	}
+	int f32 = ((b & 0x80) << 24) |
+	    (ee << 23) |
+	    (m << 20);
+	return (Float.intBitsToFloat(f32));
+    }
+
+    public static byte mfenc(float f) {
+	int b = Float.floatToIntBits(f);
+	int e = (b & 0x7f800000) >> 23;
+	int m = b & 0x007fffff;
+	int ee;
+	if(e == 0) {
+	    ee = 0;
+	    m = 0;
+	} else if(e == 0xff) {
+	    ee = 0x0f;
+	} else if(e < 127 - 6) {
+	    ee = 0;
+	    m = (m | 0x00800000) >> ((127 - 6) - e);
+	} else if(e > 127 + 7) {
+	    return (((b & 0x80000000) == 0) ? ((byte) 0x78) : ((byte) 0xf8));
+	} else {
+	    ee = e - 127 + 7;
+	}
+	int f8 = ((b >> 24) & 0x80) |
+	    (ee << 3) |
+	    (m >> 20);
+	return ((byte) f8);
+    }
+
+    public static double clip(double d, double min, double max) {
+	if(d < min)
+	    return (min);
+	if(d > max)
+	    return (max);
+	return (d);
+    }
+
+    public static float clip(float d, float min, float max) {
+	if(d < min)
+	    return (min);
+	if(d > max)
+	    return (max);
+	return (d);
+    }
+
+    public static int clip(int i, int min, int max) {
+	if(i < min)
+	    return (min);
+	if(i > max)
+	    return (max);
+	return (i);
+    }
 
     public static String strd(byte[] buf, int[] off) {
 	int i;
-	for(i = off[0]; buf[i] != 0; i++);
+	for (i = off[0]; buf[i] != 0; i++) ;
 	String ret;
 	try {
 	    ret = new String(buf, off[0], i - off[0], "utf-8");
-	} catch(UnsupportedEncodingException e) {
-	    throw(new IllegalArgumentException(e));
+	} catch (UnsupportedEncodingException e) {
+	    throw (new IllegalArgumentException(e));
 	}
 	off[0] = i + 1;
-	return(ret);
+	return (ret);
     }
 
     static byte[] byte_strd(String s) throws Exception{
@@ -230,15 +413,19 @@ public class Utils {
     public static int rnint(BufferedReader br) throws Exception{
 	return(Integer.parseInt(rnstr(br)));
     }
+    
+    public static float rfloat(BufferedReader br) throws Exception{
+	return(Float.parseFloat(rnstr(br)));
+    }
 
-    public static String rnstr(BufferedReader br) throws Exception{
+    public static String rnstr(BufferedReader br) throws Exception {
 	String n = "";
-	while( (n=br.readLine()) != null ){
+	while ((n = br.readLine()) != null) {
 	    if(n.length() > 0 && (n.charAt(0) == '#' || n.startsWith("﻿")))
 		continue;
 	    break;
 	}
-	return(n.replace("\\n","\n"));
+	return n != null ? (n.replace("\\n", "\n")) : null;
     }
 
     public static boolean isJavaClass(byte[] bytes) {

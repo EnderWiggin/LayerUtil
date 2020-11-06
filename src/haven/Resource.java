@@ -26,16 +26,15 @@
 
 package haven;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.annotation.*;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.*;
-import java.net.*;
-import java.io.*;
-
-import javax.imageio.*;
-import java.awt.Graphics;
-import java.awt.image.BufferedImage;
 
 public class Resource {
     static final String SIG = "Haven Resource 1";
@@ -87,6 +86,10 @@ public class Resource {
     public final String name;
     public int ver;
 
+    public static Coord cdec(Message buf) {
+	return (new Coord(buf.int16(), buf.int16()));
+    }
+
     public static Coord cdec(byte[] buf, int off) {
 	return (new Coord(Utils.int16d(buf, off), Utils.int16d(buf, off + 2)));
     }
@@ -124,37 +127,107 @@ public class Resource {
 	public abstract void encode(OutputStream f) throws Exception;
     }
 
+    public static class ImageReadException extends IOException {
+	public final String[] supported = ImageIO.getReaderMIMETypes();
+
+	public ImageReadException() {
+	    super("Could not decode image data");
+	}
+    }
+
+    public static BufferedImage readimage(InputStream fp) throws IOException {
+	try {
+	    /* This can crash if not privileged due to ImageIO
+	     * creating tempfiles without doing that privileged
+	     * itself. It can very much be argued that this is a bug
+	     * in ImageIO. */
+	    return (AccessController.doPrivileged(new PrivilegedExceptionAction<BufferedImage>() {
+		public BufferedImage run() throws IOException {
+		    BufferedImage ret;
+		    ret = ImageIO.read(fp);
+		    if(ret == null)
+			throw (new ImageReadException());
+		    return (ret);
+		}
+	    }));
+	} catch (PrivilegedActionException e) {
+	    Throwable c = e.getCause();
+	    if(c instanceof IOException)
+		throw ((IOException) c);
+	    throw (new AssertionError(c));
+	}
+    }
+
     public class Image extends Layer {
 	public transient BufferedImage img;
 	public byte[] raw;
 	public final int z, subz;
-	public final boolean nooff;
+	public final boolean nooff, custom;
 	public final int id;
-	public Coord o;
+	private float scale = 1;
+	public Coord sz, o, tsz;
 
-	public Image(byte[] buf) {
-	    z = Utils.int16d(buf, 0);/* 2 bytes */
-	    subz = Utils.int16d(buf, 2);/* 2 bytes */
+	public Image(byte[] bytes) {
+	    MessageBuf buf = new MessageBuf(bytes);
+	    z = buf.int16();/* 2 bytes */
+	    subz = buf.int16();/* 2 bytes */
 	    /* Obsolete flag 1: Layered */
-	    nooff = (buf[4] & 2) != 0;/* byte */
-	    id = Utils.int16d(buf, 5);/* 2 bytes */
-	    o = cdec(buf, 7);/* 4 bytes */
+	    int fl = buf.uint8();
+	    nooff = (fl & 2) != 0;/* byte */
+	    id = buf.int16();/* 2 bytes */
+	    o = cdec(buf);/* 4 bytes */
+	    custom = (fl & 4) != 0;
+	    if(custom) {
+		while (true) {
+		    String key = buf.string();
+		    if(key.equals(""))
+			break;
+		    int len = buf.uint8();
+		    if((len & 0x80) != 0)
+			len = buf.int32();
+		    Message val = new MessageBuf(buf.bytes(len));
+		    if(key.equals("tsz")) {
+			tsz = val.coord();
+		    } else if(key.equals("scale")) {
+			scale = val.float32();
+		    }
+		}
+	    }
 
 	    try {
-		img = ImageIO.read(new ByteArrayInputStream(buf, 11, buf.length - 11));
+		img = readimage(new MessageInputStream(buf));
 	    } catch (IOException e) {
 		throw (new LoadException(e, Resource.this));
 	    }
-	    if (img == null) throw (new LoadException("Invalid image data in " + name, Resource.this));
+	    sz = Utils.imgsz(img);
+	    if(tsz == null)
+		tsz = sz;
+	    if(img == null) throw (new LoadException("Invalid image data in " + name, Resource.this));
 	}
 
 	public Image(File data, File png) throws Exception {
 	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data), "UTF-8"));
 	    z = Utils.rnint(br);
 	    subz = Utils.rnint(br);
-	    nooff = (Utils.rnint(br) & 2) != 0;
+	    int fl = Utils.rnint(br);
+	    nooff = (fl & 2) != 0;
 	    id = Utils.rnint(br);
 	    o = new Coord(Utils.rnint(br), Utils.rnint(br));
+	    tsz = sz;
+	    scale = 1;
+	    boolean tmp = false;
+	    while (true) {
+		String k = Utils.rnstr(br);
+		if(k == null) {
+		    break;
+		} else if("tsz".equals(k)) {
+		    tsz = new Coord(Utils.rnint(br), Utils.rnint(br));
+		} else if("scale".equals(k)) {
+		    scale = Utils.rfloat(br);
+		}
+		tmp = true;
+	    }
+	    custom = tmp;
 	    img = ImageIO.read(png);
 	    br.close();
 	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -166,6 +239,19 @@ public class Resource {
 
 	public int size() {
 	    int s = 11;
+	    if(custom) {
+		if(scale != 1) {
+		    s += 6; //'scale\0'
+		    s += 1;//len byte
+		    s += 4;//value
+		}
+		if(tsz != sz) {
+		    s += 4; //'tsz\0'
+		    s += 1; //len byte
+		    s += 8;// 2 int16 values for size
+		}
+		s += 1;//last empty string
+	    }
 	    s += raw.length;
 	    return (s);
 	}
@@ -197,6 +283,15 @@ public class Resource {
 	    bw.write("#Coord o" + END);
 	    bw.write(Integer.toString(o.x) + END);
 	    bw.write(Integer.toString(o.y) + END);
+	    if(tsz != sz) {
+		bw.write("tsz" + END);
+		bw.write(Integer.toString(tsz.x) + END);
+		bw.write(Integer.toString(tsz.y) + END);
+	    }
+	    if(scale != 1) {
+		bw.write("scale" + END);
+		bw.write(Float.toString(scale) + END);
+	    }
 	    bw.flush();
 	    bw.close();
 	    ImageIO.write(img, "png", new File(res + "/image/image_" + i + ".png"));
@@ -205,10 +300,22 @@ public class Resource {
 	public void encode(OutputStream out) throws Exception {
 	    out.write(Utils.byte_int16d(z)); /* 2 bytes */
 	    out.write(Utils.byte_int16d(subz)); /* 2 bytes */
-	    out.write(new byte[] { (byte) (nooff ? 1 : 0) }); /* 1 byte */
+	    out.write(new byte[]{(byte) ((nooff ? 2 : 0) | (custom ? 4 : 0))}); /* 1 byte */
 	    out.write(Utils.byte_int16d(id)); /* 2 bytes */
 	    out.write(Utils.byte_int16d(o.x)); /* 2 bytes */
 	    out.write(Utils.byte_int16d(o.y)); /* 2 bytes */
+	    if(scale != 1) {
+		out.write(Utils.byte_strd("scale"));
+		out.write(4);
+		out.write(Utils.byte_float32d(scale));
+	    }
+	    if(tsz != sz) {
+		out.write(Utils.byte_strd("tsz"));
+		out.write(32);
+		out.write(Utils.byte_int16d(tsz.x)); /* 2 bytes */
+		out.write(Utils.byte_int16d(tsz.y)); /* 2 bytes */
+	    }
+	    out.write(Utils.byte_strd(""));
 	    out.write(raw); /* img bytes */
 	}
     }
