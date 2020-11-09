@@ -315,7 +315,7 @@ public class Resource {
 		out.write(Utils.byte_int16d(tsz.x)); /* 2 bytes */
 		out.write(Utils.byte_int16d(tsz.y)); /* 2 bytes */
 	    }
-	    out.write(Utils.byte_strd(""));
+	    if(custom) {out.write(Utils.byte_strd(""));}
 	    out.write(raw); /* img bytes */
 	}
     }
