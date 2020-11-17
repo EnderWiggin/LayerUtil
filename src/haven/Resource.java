@@ -338,8 +338,8 @@ public class Resource {
 
 	public Tooltip(File data) throws Exception {
 	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data), "UTF-8"));
-	    t = Utils.rnstr(br);
-	    size = Utils.byte_strd(t).length;
+	    t = Utils.rstr(br);
+	    size = Utils.byte_str(t).length;
 	    br.close();
 	}
 
@@ -370,7 +370,7 @@ public class Resource {
 	}
 
 	public void encode(OutputStream out) throws Exception {
-	    out.write(Utils.byte_strd(t)); /* str bytes */
+	    out.write(Utils.byte_str(t)); /* str bytes */
 	}
     }
 

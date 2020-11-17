@@ -335,6 +335,10 @@ public class Utils {
 	b[utf8.length] = 0;// nul end
 	return(b);
     }
+
+    static byte[] byte_str(String s) throws Exception{
+	return(s.getBytes("UTF-8"));
+    }
 	
     static char num2hex(int num) {
 	if(num < 10)
@@ -426,6 +430,16 @@ public class Utils {
 	    break;
 	}
 	return n != null ? (n.replace("\\n", "\n")) : null;
+    }
+
+    public static String rstr(BufferedReader br) throws Exception {
+	String n;
+	while ((n = br.readLine()) != null) {
+	    if(n.length() > 0 && (n.charAt(0) == '#' || n.startsWith("﻿")))
+		continue;
+	    break;
+	}
+	return n != null ? n.trim() : null;
     }
 
     public static boolean isJavaClass(byte[] bytes) {
