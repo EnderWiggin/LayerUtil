@@ -56,6 +56,7 @@ public class Resource {
     static final int IMAGE = TYPES++;
     static final int TILE = TYPES++;
     static final int NEG = TYPES++;
+    static final int OBST = TYPES++;
     static final int ANIM = TYPES++;
     static final int TILESET = TYPES++;
     static final int PAGINA = TYPES++;
@@ -596,6 +597,79 @@ public class Resource {
 	ltypes.put("neg", Neg.class);
     }
 
+    public class Obst extends Layer {
+	final int version;
+	final String id;
+	final List<Coord2d[]> polygons;
+
+	public Obst(byte[] buf) {
+	    MessageBuf msg = new MessageBuf(buf);
+	    version = msg.int8();
+	    if(version >= 2) {
+		id = msg.string();
+	    } else {
+		id = "";
+	    }
+	    int polygonCount = msg.int8();
+	    polygons = new LinkedList<>();
+	    int[] polygonSizes = new int[polygonCount];
+	    for (int i = 0; i < polygonCount; i++) {
+		polygonSizes[i] = msg.int8();
+	    }
+	    for (int i = 0; i < polygonCount; i++) {
+		int points = polygonSizes[i];
+		Coord2d[] polygon = new Coord2d[points];
+		for (int j = 0; j < points; j++) {
+		    polygon[j] = new Coord2d(msg.float16(), msg.float16());
+		}
+		polygons.add(polygon);
+	    }
+
+	    System.out.println("LL");
+	}
+
+	public Obst(File data) throws Exception {
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data), "UTF-8"));
+	    //FIXME
+	    version = 1;
+	    id = "";
+	    polygons = new LinkedList<>();
+	    br.close();
+	}
+
+	public int size() {
+	    return (0);//FIXME
+	}
+
+	public int type() {
+	    return OBST;
+	}
+
+	@Override
+	public byte[] type_buffer() { return new byte[]{111, 98, 115, 116, 0}; }
+
+	public void decode(String res, int i) throws Exception {
+	    File f = new File(res + "/obst/obst_" + i + ".data");
+	    new File(res + "/obst/").mkdirs();
+	    f.createNewFile();
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
+
+	    bw.flush();
+	    bw.close();
+	}
+
+	public void encode(OutputStream out) throws Exception {
+
+	}
+
+	public void init() {
+	}
+    }
+
+    static {
+	ltypes.put("obst", Obst.class);
+    }
+
     public class Anim extends Layer {
 	private int[] ids;
 	public int id, d;
@@ -998,31 +1072,34 @@ public class Resource {
 
     public class CodeEntry extends Layer {
 	private int size = 0;
-	private ArrayList<String> p = new ArrayList<String>();
-	private ArrayList<String> e = new ArrayList<String>();
+	private ArrayList<String> key = new ArrayList<>();
+	private ArrayList<String> value = new ArrayList<>();
+	private Map<String, Integer> requires = new HashMap<>();
 
 	public CodeEntry(byte[] buf) {
-	    int[] off = new int[1];
-	    off[0] = 0;
-	    while (off[0] < buf.length) {
-		int t = buf[off[0]++];
+	    MessageBuf msg = new MessageBuf(buf);
+	    while (!msg.eom()) {
+		int t = msg.uint8();
 		if(t == 1) {
-		    while(true) {
-			String ps = Utils.strd(buf, off);
-			String es = Utils.strd(buf, off);
-			if(ps.length() == 0)
+		    while (true) {
+			String en = msg.string();
+			String cn = msg.string();
+			if(en.length() == 0)
 			    break;
-			p.add(ps);/* String */
-			e.add(es);/* String */
+			key.add(en);
+			value.add(cn);
 		    }
 		} else if(t == 2) {
-		    while(true) {
-			String ln = Utils.strd(buf, off);
+		    while (true) {
+			String ln = msg.string();
 			if(ln.length() == 0)
 			    break;
-			int ver = Utils.uint16d(buf, off[0]); off[0] += 2;
-			//classpath.add(Resource.load(ln, ver));
+			int ver = msg.uint16();
+			requires.put(ln, ver);
+			//classpath.add(pool.load(ln, ver));
 		    }
+		} else {
+		    throw (new LoadException("Unknown codeentry data type: " + t, Resource.this));
 		}
 	    }
 	}
@@ -1031,14 +1108,34 @@ public class Resource {
 	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(data), "UTF-8"));
 	    String t;
 	    int s = Utils.rnint(br);
-	    for (int j = 0; j < s; ++j) {
-		t = Utils.rnstr(br);
-		p.add(t);
-		size += Utils.byte_strd(t).length;
-		t = Utils.rnstr(br);
-		e.add(t);
-		size += Utils.byte_strd(t).length;
+	    if(s > 0) {
+		size += 1;//type
+		for (int j = 0; j < s; ++j) {
+		    t = Utils.rnstr(br);
+		    key.add(t);
+		    size += Utils.byte_strd(t).length;
+		    t = Utils.rnstr(br);
+		    value.add(t);
+		    size += Utils.byte_strd(t).length;
+		}
+		size += 2;//double 0 for end
 	    }
+
+	    //requirements
+	    String len = Utils.rnstr(br);
+	    if(len != null) {
+		s = Integer.parseInt(len);
+		size += 1;//type
+		for (int i = 0; i < s; i++) {
+		    t = Utils.rnstr(br);
+		    size += Utils.byte_strd(t).length;
+		    int v = Utils.rnint(br);
+		    size += 2;
+		    requires.put(t, v);
+		}
+		size += 1;// 0 to end
+	    }
+
 	    br.close();
 	}
 
@@ -1060,21 +1157,46 @@ public class Resource {
 	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), "UTF-8"));
 	    bw.write("#CODEENTRY LAYER FOR RES " + res + END);
 	    bw.write("#int32 length" + END);
-	    bw.write(p.size() + END);
-	    for (int j = 0; j < p.size(); ++j) {
+	    bw.write(key.size() + END);
+	    for (int j = 0; j < key.size(); ++j) {
 		bw.write("#String key[" + j + "]" + END);
-		bw.write(p.get(j).replace("\n", "\\n") + END);
+		bw.write(key.get(j).replace("\n", "\\n") + END);
 		bw.write("#String value[" + j + "]" + END);
-		bw.write(e.get(j).replace("\n", "\\n") + END);
+		bw.write(value.get(j).replace("\n", "\\n") + END);
+	    }
+	    if(!requires.isEmpty()) {
+		bw.write("#start of requirements" + END);
+		bw.write("#int32 length" + END);
+		Set<Map.Entry<String, Integer>> entries = requires.entrySet();
+		bw.write(entries.size() + END);
+		for (Map.Entry<String, Integer> e : entries) {
+		    bw.write("#String resource" + END);
+		    bw.write(e.getKey().replace("\n", "\\n") + END);
+		    bw.write("#uint16 version" + END);
+		    bw.write(e.getValue() + END);
+		}
 	    }
 	    bw.flush();
 	    bw.close();
 	}
 
 	public void encode(OutputStream out) throws Exception {
-	    for (int i = 0; i < p.size(); ++i) {
-		out.write(Utils.byte_strd(p.get(i)));
-		out.write(Utils.byte_strd(e.get(i)));
+	    if(key.size() > 0) {
+		out.write((byte) 1);
+		for (int i = 0; i < key.size(); ++i) {
+		    out.write(Utils.byte_strd(key.get(i)));
+		    out.write(Utils.byte_strd(value.get(i)));
+		}
+		out.write((byte) 0);
+		out.write((byte) 0);
+	    }
+	    if(!requires.isEmpty()) {
+		out.write((byte) 2);
+		for (Map.Entry<String, Integer> e : requires.entrySet()) {
+		    out.write(Utils.byte_strd(e.getKey()));
+		    out.write(Utils.byte_int16d(e.getValue()));
+		}
+		out.write((byte) 0);
 	    }
 	}
 
