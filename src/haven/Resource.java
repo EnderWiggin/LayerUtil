@@ -31,6 +31,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -67,6 +68,7 @@ public class Resource {
     static final int CODE = TYPES++;
     static final int CODEENTRY = TYPES++;
     static final int SOURCES = TYPES++;
+    static final int OVERLAY = TYPES++;
     /*
       IMAGE	=> .data + .png
       TILE	=> .data + .png
@@ -1356,6 +1358,133 @@ public class Resource {
 	ltypes.put("src", Sources.class);
     }
 
+    public class Overlay extends Resource.Layer {
+	Collection<String> tags;
+	int matid = -1;
+	int omatid = -1;
+
+	public Overlay(byte[] bytes) {
+	    MessageBuf buf = new MessageBuf(bytes);
+	    int ver = buf.uint8();
+	    if (ver == 1) {
+		int matid = 0, omatid = -1;
+		Collection<String> tags = Collections.emptyList();
+		Object[] data = buf.list();
+		for (Object argp : data) {
+		    Object[] arg = (Object[]) argp;
+		    switch ((String) arg[0]) {
+			case "tags": {
+			    ArrayList<String> tbuf = new ArrayList<>();
+			    for (int i = 1; i < arg.length; i++)
+				tbuf.add(((String) arg[i]).intern());
+			    tbuf.trimToSize();
+			    tags = tbuf;
+			    break;
+			}
+			case "mat": {
+			    matid = (Integer) arg[1];
+			    break;
+			}
+			case "omat": {
+			    omatid = (Integer) arg[1];
+			    break;
+			}
+		    }
+		}
+		this.matid = matid;
+		this.omatid = omatid;
+		this.tags = tags;
+	    }
+	}
+
+	public Overlay(File src) throws Exception {
+	    FileInputStream fis = new FileInputStream(src);
+	    BufferedReader br = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8));
+	    matid = Utils.rnint(br);
+	    omatid = Utils.rnint(br);
+	    tags = new LinkedList<>();
+	    while (true) {
+		String line = Utils.rstr(br);
+		if (line == null) {
+		    break;
+		} else {
+		    tags.add(line);
+		}
+	    }
+	    fis.close();
+	}
+
+	@Override
+	public void init() {
+	}
+
+	@Override
+	public int size() {
+	    return bytes().length;
+	}
+
+	@Override
+	public int type() {
+	    return OVERLAY;
+	}
+
+	public byte[] bytes() {
+	    MessageBuf buf = new MessageBuf();
+	    Object[] tags = new Object[this.tags.size() + 1];
+	    tags[0] = "tags";
+	    int i = 1;
+	    for (String tag : this.tags) {
+		tags[i] = tag;
+		i++;
+	    }
+	    List<Object> data = new ArrayList<>(3);
+	    data.add(tags);
+	    if (matid != 0) {
+		data.add(new Object[]{"mat", matid});
+	    }
+	    if (omatid != -1) {
+		data.add(new Object[]{"omat", omatid});
+	    }
+	    Object[] args = data.toArray();
+	    buf.addlist(args);
+	    byte[] bytes = buf.fin();
+	    return bytes;
+	}
+
+	@Override
+	public byte[] type_buffer() {
+	    return new byte[]{111, 118, 101, 114, 108, 97, 121, 0};
+	}//overlay
+
+	@Override
+	public void decode(String res, int i) throws Exception {
+	    File f = new File(res + "/overlay/overlay_" + i + ".data");
+	    new File(res + "/overlay/").mkdirs();
+	    f.createNewFile();
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), StandardCharsets.UTF_8));
+	    bw.write("#OVERLAY LAYER FOR RES " + res + END);
+	    bw.write("#Byte matid" + END);
+	    bw.write(Integer.toString(matid) + END);
+	    bw.write("#Byte omatid" + END);
+	    bw.write(Integer.toString(omatid) + END);
+	    bw.write("#string[] tags" + END);
+	    for (String tag : tags) {
+		bw.write(tag + END);
+	    }
+	    bw.flush();
+	    bw.close();
+	}
+
+	@Override
+	public void encode(OutputStream out) throws Exception {
+	    out.write(bytes());
+	}
+    }
+
+    static {
+	ltypes.put("overlay", Overlay.class);
+    }
+
     public Resource(String full, String name, String out, boolean w) throws Exception {
 	this.out = out;
 	this.name = name;
@@ -1526,7 +1655,12 @@ public class Resource {
 			for (j = 0; j < df.length; ++j)
 			    if (df[j].getName().endsWith(".data")) layers.add(cons.newInstance(this, df[j]));
 		    }
-			break;
+		    break;
+		    case "overlay": { /* .data */
+			for (j = 0; j < df.length; ++j)
+			    if (df[j].getName().endsWith(".data")) layers.add(new Overlay(df[j]));
+		    }
+		    break;
 		    case "midi": { /* .music */
 			try {
 			    cons = lc.getConstructor(Resource.class, File.class);
