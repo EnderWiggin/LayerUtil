@@ -136,7 +136,7 @@ public class Resource {
 	}
     }
 
-    public static BufferedImage readimage(InputStream fp) throws IOException {
+    public static BufferedImage readimage(final InputStream fp) throws IOException {
 	try {
 	    /* This can crash if not privileged due to ImageIO
 	     * creating tempfiles without doing that privileged
@@ -1480,6 +1480,11 @@ public class Resource {
 		Constructor<? extends Layer> cons;
 
 		df = l[i].listFiles();
+		Arrays.sort(df, new Comparator<File>() {
+			public int compare(File a, File b) {
+				return a.getName().compareTo(b.getName());
+			}
+		});
 		switch (n) {
 		    case "image":
 		    case "tile": { /* .data + .png */
