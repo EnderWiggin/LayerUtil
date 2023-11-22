@@ -15,16 +15,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library">
-      <library name="JRE_LIB">
-        <CLASSES>
-          <root url="file://$JRE_LIB$" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="file://$JRE_LIB$" />
-        </SOURCES>
-      </library>
-    </orderEntry>
+    <orderEntry type="library" name="lib" level="project" />
   </component>
 </module>

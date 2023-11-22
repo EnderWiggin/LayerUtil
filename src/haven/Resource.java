@@ -26,6 +26,9 @@
 
 package haven;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -69,6 +72,7 @@ public class Resource {
     static final int CODEENTRY = TYPES++;
     static final int SOURCES = TYPES++;
     static final int OVERLAY = TYPES++;
+    static final int MAT2 = TYPES++;
     /*
       IMAGE	=> .data + .png
       TILE	=> .data + .png
@@ -1485,6 +1489,79 @@ public class Resource {
 	ltypes.put("overlay", Overlay.class);
     }
 
+    public class NewMat extends Resource.Layer {
+	private class Data {
+	    int id;
+	    Map<String, Object[]> mats = new HashMap<>();
+	}
+
+	Data data = new Data();
+
+	public NewMat(byte[] bytes) {
+	    MessageBuf buf = new MessageBuf(bytes);
+	    data.id = buf.uint16();
+	    while (!buf.eom()) {
+		data.mats.put(buf.string(), buf.list());
+	    }
+	}
+
+	public NewMat(File src) throws Exception {
+	    FileInputStream fis = new FileInputStream(src);
+	    BufferedReader br = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8));
+	    Gson gson = new GsonBuilder().create();
+	    data = gson.fromJson(br, Data.class);
+	    fis.close();
+	}
+
+	@Override
+	public void init() {
+	}
+
+	@Override
+	public int size() {
+	    return bytes().length;
+	}
+
+	@Override
+	public int type() {
+	    return MAT2;
+	}
+
+	public byte[] bytes() {
+	    MessageBuf buf = new MessageBuf();
+	    buf.adduint16(data.id);
+
+	    byte[] bytes = buf.fin();
+	    return bytes;
+	}
+
+	@Override
+	public byte[] type_buffer() {
+	    return new byte[]{109, 97, 116, 50, 0};
+	}//mat2
+
+	@Override
+	public void decode(String res, int i) throws Exception {
+	    File f = new File(res + "/mat2/mat2_" + i + ".json");
+	    new File(res + "/mat2/").mkdirs();
+	    f.createNewFile();
+	    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, false), StandardCharsets.UTF_8));
+	    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+	    bw.write(gson.toJson(data));
+	    bw.flush();
+	    bw.close();
+	}
+
+	@Override
+	public void encode(OutputStream out) throws Exception {
+	    out.write(bytes());
+	}
+    }
+
+    static {
+	ltypes.put("mat2", NewMat.class);
+    }
+
     public Resource(String full, String name, String out, boolean w) throws Exception {
 	this.out = out;
 	this.name = name;
@@ -1646,6 +1723,7 @@ public class Resource {
 		    case "tileset":
 		    case "codeentry":
 		    case "pagina":
+		    case "overlay":
 		    case "action": { /* .data */
 			try {
 			    cons = lc.getConstructor(Resource.class, File.class);
@@ -1656,9 +1734,14 @@ public class Resource {
 			    if (df[j].getName().endsWith(".data")) layers.add(cons.newInstance(this, df[j]));
 		    }
 		    break;
-		    case "overlay": { /* .data */
+		    case "mat2": { /* .data */
+			try {
+			    cons = lc.getConstructor(Resource.class, File.class);
+			} catch (NoSuchMethodException e) {
+			    throw (new LoadException(e, Resource.this));
+			}
 			for (j = 0; j < df.length; ++j)
-			    if (df[j].getName().endsWith(".data")) layers.add(new Overlay(df[j]));
+			    if (df[j].getName().endsWith(".json")) layers.add(cons.newInstance(this, df[j]));
 		    }
 		    break;
 		    case "midi": { /* .music */
