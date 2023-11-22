@@ -173,6 +173,7 @@ public class Resource {
 	public final int id;
 	private float scale = 1;
 	public Coord sz, o, tsz;
+	public Map<String, byte[]> kvdata = null;
 
 	public Image(byte[] bytes) {
 	    MessageBuf buf = new MessageBuf(bytes);
@@ -184,6 +185,7 @@ public class Resource {
 	    id = buf.int16();/* 2 bytes */
 	    o = cdec(buf);/* 4 bytes */
 	    custom = (fl & 4) != 0;
+	    Map<String, byte[]> kvdata = new HashMap<>();
 	    if(custom) {
 		while (true) {
 		    String key = buf.string();
@@ -192,14 +194,18 @@ public class Resource {
 		    int len = buf.uint8();
 		    if((len & 0x80) != 0)
 			len = buf.int32();
-		    Message val = new MessageBuf(buf.bytes(len));
+		    byte[] data = buf.bytes(len);
+		    Message val = new MessageBuf(data);
 		    if(key.equals("tsz")) {
 			tsz = val.coord();
 		    } else if(key.equals("scale")) {
 			scale = val.float32();
+		    } else {
+			kvdata.put(key, data);
 		    }
 		}
 	    }
+	    this.kvdata = kvdata.isEmpty() ? Collections.emptyMap() : kvdata;
 
 	    try {
 		img = readimage(new MessageInputStream(buf));
@@ -223,6 +229,7 @@ public class Resource {
 	    tsz = sz;
 	    scale = 1;
 	    boolean tmp = false;
+	    Map<String, byte[]> kvdata = new HashMap<>();
 	    while (true) {
 		String k = Utils.rnstr(br);
 		if(k == null) {
@@ -231,9 +238,12 @@ public class Resource {
 		    tsz = new Coord(Utils.rnint(br), Utils.rnint(br));
 		} else if("scale".equals(k)) {
 		    scale = Utils.rfloat(br);
+		} else {
+		    kvdata.put(k, Utils.rstrbytes(br));
 		}
 		tmp = true;
 	    }
+	    this.kvdata = kvdata.isEmpty() ? Collections.emptyMap() : kvdata;
 	    custom = tmp;
 	    img = ImageIO.read(png);
 	    br.close();
@@ -256,6 +266,13 @@ public class Resource {
 		    s += 4; //'tsz\0'
 		    s += 1; //len byte
 		    s += 8;// 2 int16 values for size
+		}
+		if (!kvdata.isEmpty()) {
+		    for (Map.Entry<String, byte[]> entry : kvdata.entrySet()) {
+			s += entry.getKey().length() + 1; //key +'\0'
+			s += 1;//len byte
+			s += entry.getValue().length;
+		    }
 		}
 		s += 1;//last empty string
 	    }
@@ -299,6 +316,14 @@ public class Resource {
 		bw.write("scale" + END);
 		bw.write(Float.toString(scale) + END);
 	    }
+	    if (!kvdata.isEmpty()) {
+		for (Map.Entry<String, byte[]> entry : kvdata.entrySet()) {
+		    bw.write(entry.getKey() + END);
+		    String bytes = Arrays.toString(entry.getValue());
+		    bytes = bytes.substring(1, bytes.length() - 1);
+		    bw.write(bytes + END);
+		}
+	    }
 	    bw.flush();
 	    bw.close();
 	    ImageIO.write(img, "png", new File(res + "/image/image_" + i + ".png"));
@@ -319,8 +344,15 @@ public class Resource {
 	    if(tsz != sz) {
 		out.write(Utils.byte_strd("tsz"));
 		out.write(32);
-		out.write(Utils.byte_int16d(tsz.x)); /* 2 bytes */
-		out.write(Utils.byte_int16d(tsz.y)); /* 2 bytes */
+		out.write(Utils.byte_int32d(tsz.x)); /* 2 bytes */
+		out.write(Utils.byte_int32d(tsz.y)); /* 2 bytes */
+	    }
+	    if (!kvdata.isEmpty()) {
+		for (Map.Entry<String, byte[]> entry : kvdata.entrySet()) {
+		    out.write(Utils.byte_strd(entry.getKey()));
+		    out.write(entry.getValue().length);
+		    out.write(entry.getValue());
+		}
 	    }
 	    if(custom) {out.write(Utils.byte_strd(""));}
 	    out.write(raw); /* img bytes */

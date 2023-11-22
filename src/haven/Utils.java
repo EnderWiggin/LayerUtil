@@ -29,7 +29,10 @@ package haven;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class Utils {
 
@@ -440,6 +443,19 @@ public class Utils {
 	    break;
 	}
 	return n != null ? n.trim() : null;
+    }
+
+    public static byte[] rstrbytes(BufferedReader br) throws Exception {
+	String[] split = Utils.rstr(br).split(", ");
+	List<Byte> list = Arrays.stream(split)
+		.map(Byte::parseByte)
+		.collect(Collectors.toList());
+
+	byte[] bytes = new byte[list.size()];
+	for (int i = 0; i < list.size(); i++) {
+	    bytes[i] = list.get(i);
+	}
+	return bytes;
     }
 
     public static boolean isJavaClass(byte[] bytes) {
